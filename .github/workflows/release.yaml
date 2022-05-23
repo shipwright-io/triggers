@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'Desired tag'
+        required: true
+      tags:
+        description: 'Previous tag'
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # To be able to get OIDC ID token to sign images.
+      contents: write  # To be able to update releases.
+      packages: write  # To be able to push images and signatures.
+      pull-requests: write # To be able to create pull requests
+    env:
+      IMAGE_HOST: ghcr.io
+      IMAGE_NAMESPACE: ${{ github.repository }}
+      TAG: ${{ github.event.inputs.release }}
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0  # Fetch all history, needed for release note generation.
+    - uses: actions/setup-go@v2
+      with:
+        go-version: 1.17.x
+
+    - name: Build Release Changelog
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PREVIOUS_TAG: ${{ github.event.inputs.tags }}
+      run: |
+        # might not be necessary but make sure
+        chmod +x "${GITHUB_WORKSPACE}/.github/draft_release_notes.sh"
+        export GITHUB_TOKEN
+        export PREVIOUS_TAG
+        "${GITHUB_WORKSPACE}/.github/draft_release_notes.sh"
+
+    - name: Draft release
+      id: draft_release
+      uses: actions/create-release@v1
+      with:
+        release_name: "${{ github.event.inputs.release }}"
+        tag_name: ${{ github.event.inputs.release }}
+        body_path: Changes.md
+        draft: true
+        prerelease: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

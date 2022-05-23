@@ -1,37 +1,30 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  labels:
-    control-plane: controller-manager
-  name: system
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: controller-manager
+  name: controller
   namespace: system
   labels:
-    control-plane: controller-manager
+    shipwright.io/component: triggers
 spec:
   selector:
     matchLabels:
-      control-plane: controller-manager
+      shipwright.io/component: triggers
   replicas: 1
   template:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: manager
       labels:
-        control-plane: controller-manager
+        shipwright.io/component: triggers
     spec:
       securityContext:
         runAsNonRoot: true
       containers:
       - command:
-        - /manager
+        - /ko-app/triggers
         args:
         - --leader-elect
-        image: controller:latest
+        image: ko://github.com/shipwright-io/triggers
         name: manager
         securityContext:
           allowPrivilegeEscalation: false
@@ -56,5 +49,5 @@ spec:
           requests:
             cpu: 10m
             memory: 64Mi
-      serviceAccountName: controller-manager
+      serviceAccountName: controller
       terminationGracePeriodSeconds: 10
