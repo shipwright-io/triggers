@@ -1,0 +1,6 @@
+---
+apiVersion: v2
+name: shipwright-triggers
+description: Shipwright Triggers
+type: application
+version: 0.0.1
