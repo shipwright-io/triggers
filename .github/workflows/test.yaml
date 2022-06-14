@@ -1,0 +1,34 @@
+---
+name: test
+
+on:
+  push:
+    tags-ignore:
+      - "**"
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test-unit:
+    name: test-unit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/setup
+
+      - name: test-unit
+        run: make test-unit
+
+  test-e2e:
+    name: test-e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/setup
+      - uses: ./.github/actions/shipwright
+
+      - name: test-e2e
+        run: make test-e2e
