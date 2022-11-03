@@ -2,6 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  namespace: {{ .Release.Namespace }}
   name: {{ include "chart.fullname" . }}
   labels:
     {{- include "chart.labels" . | nindent 4 }}
@@ -31,18 +32,24 @@ spec:
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.name }}"
+          args:
+            - --health-probe-bind-address
+            - ":{{ .Values.service.probe.port }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - name: http
-              containerPort: 80
+            - name: webhook
+              containerPort: {{ .Values.service.webhook.port }}
+              protocol: TCP
+            - name: probe
+              containerPort: {{ .Values.service.probe.port }}
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /
-              port: http
+              path: /healthz
+              port: probe
           readinessProbe:
             httpGet:
-              path: /
-              port: http
+              path: /readyz
+              port: probe
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

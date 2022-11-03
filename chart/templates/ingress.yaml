@@ -1,10 +1,11 @@
 ---
 {{- if .Values.ingress.enabled -}}
 {{- $fullName := include "chart.fullname" . -}}
-{{- $svcPort := .Values.service.port -}}
+{{- $svcPort := .Values.service.webhook.port -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
+  namespace: {{ .Release.Namespace }}
   name: {{ $fullName }}
   labels:
     {{- include "chart.labels" . | nindent 4 }}
