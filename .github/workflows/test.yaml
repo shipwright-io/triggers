@@ -22,13 +22,23 @@ jobs:
       - name: test-unit
         run: make test-unit
 
-  test-e2e:
-    name: test-e2e
+  test-integration:
+    name: test-integration
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/setup
-      - uses: ./.github/actions/shipwright
 
-      - name: test-e2e
-        run: make test-e2e
+      - name: test-integration
+        run: make test-integration
+
+  # test-e2e:
+  #   name: test-e2e
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: ./.github/actions/setup
+  #     - uses: ./.github/actions/shipwright
+
+  #     - name: test-e2e
+  #       run: make test-e2e
