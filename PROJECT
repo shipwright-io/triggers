@@ -1,0 +1,7 @@
+---
+projectName: triggers
+domain: triggers.shipwright.io
+repo: github.com/shipwright-io/triggers
+layout:
+  - go.kubebuilder.io/v3
+version: "3"
