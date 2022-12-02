@@ -31,8 +31,10 @@ securityContext: {}
   # runAsUser: 1000
 
 service:
-  type: ClusterIP
-  port: 80
+  webhook:
+    port: 80
+  probe:
+    port: 8081
 
 ingress:
   enabled: false

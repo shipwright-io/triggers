@@ -35,6 +35,8 @@ Common labels
 */}}
 {{- define "chart.labels" -}}
 helm.sh/chart: {{ include "chart.chart" . }}
+meta.helm.sh/release-name: {{ include "chart.fullname" . }}
+meta.helm.sh/release-namespace: {{ .Release.Namespace }}
 {{ include "chart.selectorLabels" . }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}

@@ -1,2 +1,4 @@
-*.test
-triggers
+/bin/
+/*.out
+/*.test
+/triggers
