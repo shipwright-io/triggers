@@ -33,3 +33,25 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - tekton.dev
+  resources:
+  - runs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - tekton.dev
+  resources:
+  - runs/finalizers
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - tekton.dev
+  resources:
+  - runs/status
+  verbs:
+  - patch
+  - update
