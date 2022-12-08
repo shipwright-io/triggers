@@ -6,14 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-logr/logr"
 	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
 	"github.com/shipwright-io/triggers/pkg/constants"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/clock"
 	"knative.dev/pkg/apis"
 )
@@ -35,25 +32,6 @@ var (
 	TektonPipelineRunTriggeredBuilds = fmt.Sprintf("%s/pipelinerun-triggered-builds", Prefix)
 )
 
-// searchBuildRunForRunOwner inspect the object owners for Tekton Run and returns it, otherwise nil.
-func searchBuildRunForRunOwner(br *v1alpha1.BuildRun) *types.NamespacedName {
-	for _, ownerRef := range br.OwnerReferences {
-		if ownerRef.APIVersion == constants.TektonAPIv1alpha1 && ownerRef.Kind == "Run" {
-			return &types.NamespacedName{Namespace: br.GetNamespace(), Name: ownerRef.Name}
-		}
-	}
-	return nil
-}
-
-// filterBuildRunOwnedByRun filter out BuildRuns objects not owned by Tekton Run.
-func filterBuildRunOwnedByRun(obj interface{}) bool {
-	br, ok := obj.(*v1alpha1.BuildRun)
-	if !ok {
-		return false
-	}
-	return searchBuildRunForRunOwner(br) != nil
-}
-
 // pipelineRunReferencesShipwright checks if the informed PipelineRun is reffering to a Shipwright
 // resource via TaskRef.
 func pipelineRunReferencesShipwright(pipelineRun *tknv1beta1.PipelineRun) bool {
@@ -71,20 +49,15 @@ func pipelineRunReferencesShipwright(pipelineRun *tknv1beta1.PipelineRun) bool {
 	return false
 }
 
-// EventFilterPredicate predicate filter for the basic inspections in the object, filtering only what
-// needs to go through reconciliation. PipelineRun objects referencing Custom-Tasks are also skipped.
-func EventFilterPredicate(obj client.Object) bool {
-	logger := logr.New(log.Log.GetSink()).
-		WithValues("namespace", obj.GetNamespace(), "name", obj.GetName())
+// PipelineRunEventFilterPredicate predicate filter for the basic inspections in the object,
+// filtering only what needs to go through reconciliation. PipelineRun objects referencing
+// Custom-Tasks are also skipped.
+func PipelineRunEventFilterPredicate(obj client.Object) bool {
+	logger := loggerForClientObj(obj, "controller.pipelinerun-filter")
 
 	pipelineRun, ok := obj.(*tknv1beta1.PipelineRun)
 	if !ok {
 		logger.V(0).Error(nil, "Unable to cast object as Tekton PipelineRun")
-		return false
-	}
-
-	if !pipelineRun.ObjectMeta.DeletionTimestamp.IsZero() {
-		logger.V(0).Info("Marked for deletion")
 		return false
 	}
 

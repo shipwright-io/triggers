@@ -6,7 +6,7 @@ import (
 
 type realClock struct{}
 
-func (_ realClock) Now() time.Time {
+func (realClock) Now() time.Time {
 	return time.Now()
 }
 

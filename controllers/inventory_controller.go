@@ -34,7 +34,7 @@ func (r *InventoryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			logger.Error(err, "Unable to fetch Build, removing from the Inventory")
 		}
 		r.buildInventory.Remove(req.NamespacedName)
-		return ctrl.Result{}, client.IgnoreNotFound(err)
+		return RequeueOnError(client.IgnoreNotFound(err))
 	}
 
 	if b.ObjectMeta.DeletionTimestamp.IsZero() {
@@ -45,7 +45,7 @@ func (r *InventoryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		r.buildInventory.Remove(req.NamespacedName)
 	}
 
-	return ctrl.Result{}, nil
+	return Done()
 }
 
 // SetupWithManager uses the manager to watch over Builds.
