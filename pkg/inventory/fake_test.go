@@ -71,7 +71,10 @@ func (i *FakeInventory) search() []SearchResult {
 }
 
 // SearchForObjectRef returns all Builds in cache.
-func (i *FakeInventory) SearchForObjectRef(v1alpha1.TriggerType, *v1alpha1.WhenObjectRef) []SearchResult {
+func (i *FakeInventory) SearchForObjectRef(
+	v1alpha1.TriggerType,
+	*v1alpha1.WhenObjectRef,
+) []SearchResult {
 	i.m.Lock()
 	defer i.m.Unlock()
 

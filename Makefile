@@ -115,6 +115,7 @@ $(ENVTEST):
 # run integration tests, with optional arguments
 .PHONY: test-integration
 test-integration: CGO_ENABLED=1
+test-integration: KUBEBUILDER_ATTACH_CONTROL_PLANE_OUTPUT=true
 test-integration: download-crds manifests envtest
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" \
 		go test $(GOFLAGS_TEST) ./test/integration/... \
@@ -129,3 +130,8 @@ test-e2e:
 .PHONY: act
 act:
 	@act --secret="GITHUB_TOKEN=${GITHUB_TOKEN}" $(ARGS)
+
+# removes the output directory
+.PHONY: clean
+clean:
+	rm -rf "$(LOCAL_BIN)" || true

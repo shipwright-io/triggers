@@ -23,18 +23,20 @@ var TektonPipelineTaskRefToShipwright = tknv1beta1.PipelineTask{
 	},
 }
 
-var TektonTaskRefToShipwright = &tknv1beta1.TaskRef{
-	APIVersion: constants.ShipwrightAPIVersion,
-	Kind:       "Build",
-	Name:       "shipwright-ex",
-}
-
 var TektonTaskRefToTekton = &tknv1beta1.TaskRef{
 	Name: "task-ex",
 }
 
-func TektonRun(name string, ref *tknv1beta1.TaskRef) tknv1alpha1.Run {
-	return tknv1alpha1.Run{
+func TektonTaskRefToShipwright(name string) *tknv1beta1.TaskRef {
+	return &tknv1beta1.TaskRef{
+		APIVersion: constants.ShipwrightAPIVersion,
+		Kind:       "Build",
+		Name:       name,
+	}
+}
+
+func TektonRun(name string, ref *tknv1beta1.TaskRef) *tknv1alpha1.Run {
+	return &tknv1alpha1.Run{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: Namespace,
 			Name:      name,
@@ -43,6 +45,17 @@ func TektonRun(name string, ref *tknv1beta1.TaskRef) tknv1alpha1.Run {
 			Ref: ref,
 		},
 	}
+}
+
+// TektonRunStarted returns a started (now) run instance using the name and TaskRef informed.
+func TektonRunStarted(name string, ref *tknv1beta1.TaskRef) *tknv1alpha1.Run {
+	run := TektonRun(name, ref)
+	run.Status = tknv1alpha1.RunStatus{
+		RunStatusFields: tknv1alpha1.RunStatusFields{
+			StartTime: &metav1.Time{Time: time.Now()},
+		},
+	}
+	return run
 }
 
 func TektonPipelineRunCanceled(name string) tknv1beta1.PipelineRun {

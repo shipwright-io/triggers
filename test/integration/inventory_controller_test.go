@@ -2,6 +2,7 @@ package integration
 
 import (
 	"context"
+	"time"
 
 	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
 	"github.com/shipwright-io/triggers/test/stubs"
@@ -45,6 +46,11 @@ var _ = Describe("Build Inventory Controller", Ordered, func() {
 				buildWithPipelineTrigger.Spec.Trigger.When[0].ObjectRef,
 			))
 		}
+
+		AfterAll(func() {
+			_ = kubeClient.Delete(ctx, buildWithPipelineTrigger, deleteNowOpts)
+			time.Sleep(gracefulWait)
+		})
 
 		It("Should add a Build instances (with triggers)", func() {
 			Expect(kubeClient.Create(ctx, buildWithGitHubTrigger)).Should(Succeed())
