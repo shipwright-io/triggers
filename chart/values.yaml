@@ -44,10 +44,10 @@ ingress:
   hosts:
     - host: chart-example.local
       paths:
-      - path: /
-        backend:
-          serviceName: chart-example.local
-          servicePort: 80
+        - path: /
+          backend:
+            serviceName: chart-example.local
+            servicePort: 80
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
@@ -60,3 +60,33 @@ resources: {}
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
+
+# https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+affinity: {}
+  # nodeAffinity:
+  #   preferredDuringSchedulingIgnoredDuringExecution:
+  #     - weight: 1
+  #       preference:
+  #         matchExpressions:
+  #           - key: node-role.kubernetes.io/control-plane
+  #             operator: In
+  #             values:
+  #               - control-plane
+  # podAntiAffinity:
+  #   preferredDuringSchedulingIgnoredDuringExecution:
+  #     - weight: 100
+  #       podAffinityTerm:
+  #         labelSelector:
+  #           matchLabels:
+  #             app.kubernetes.io/name: shipwright-triggers
+  #         topologyKey: topology.kubernetes.io/zone
+
+# https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
+nodeSelector: {}
+  # node-role.kubernetes.io/control-plane: control-plane
+
+# https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+tolerations: []
+  # - key: node-role.kubernetes.io/control-plane
+  #   operator: "Exists"
+  #   effect: "NoSchedule"
