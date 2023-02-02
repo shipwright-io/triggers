@@ -15,7 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
@@ -121,7 +121,7 @@ func (r *PipelineRunReconciler) Reconcile(
 	// search for Builds with Pipeline triggers matching current ObjectRef criteria
 	buildsToBeIssued := r.buildInventory.SearchForObjectRef(v1alpha1.PipelineTrigger, objectRef)
 	if len(buildsToBeIssued) == 0 {
-		return ctrl.Result{}, nil
+		return Done()
 	}
 
 	buildNames := inventory.ExtractBuildNames(buildsToBeIssued...)
@@ -146,7 +146,7 @@ func (r *PipelineRunReconciler) Reconcile(
 		// shows  which build names and the objectRef employed
 		if filter.TriggereBuildsContainsObjectRef(triggeredBuilds, buildNames, objectRef) {
 			logger.V(0).Info("BuildRuns for PipelineRun have already been issued!")
-			return ctrl.Result{}, nil
+			return Done()
 		}
 	} else {
 		logger.V(0).Info("PipelineRun annotated name does not match current object!")
@@ -157,7 +157,7 @@ func (r *PipelineRunReconciler) Reconcile(
 	buildRunsIssued, err := r.issueBuildRunsForPipelineRun(ctx, &pipelineRun, buildNames)
 	if err != nil {
 		logger.V(0).Error(err, "trying to issue BuildRun instances", "buildruns", buildRunsIssued)
-		return ctrl.Result{}, err
+		return RequeueOnError(err)
 	}
 	logger.V(0).Info("BuildRuns issued", "buildruns", buildRunsIssued)
 
@@ -181,9 +181,9 @@ func (r *PipelineRunReconciler) Reconcile(
 	// patching the PipelineRun to reflect labels and annotations needed on the object
 	if err = r.Client.Patch(ctx, &pipelineRun, client.MergeFrom(originalPipelineRun)); err != nil {
 		logger.V(0).Error(err, "trying to update PipelineRun metadata")
-		return ctrl.Result{}, err
+		return RequeueOnError(err)
 	}
-	return ctrl.Result{}, nil
+	return Done()
 }
 
 // SetupWithManager uses the manager to watch over PipelineRuns.
@@ -194,12 +194,8 @@ func (r *PipelineRunReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&tknv1beta1.PipelineRun{}).
-		WithEventFilter(predicate.NewPredicateFuncs(filter.EventFilterPredicate)).
-		WithEventFilter(predicate.Funcs{
-			DeleteFunc: func(e event.DeleteEvent) bool {
-				return !e.DeleteStateUnknown
-			},
-		}).
+		WithEventFilter(predicate.NewPredicateFuncs(filter.PipelineRunEventFilterPredicate)).
+		WithOptions(controller.Options{MaxConcurrentReconciles: 1}).
 		Complete(r)
 }
 

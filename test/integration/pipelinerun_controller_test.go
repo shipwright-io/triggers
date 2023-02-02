@@ -1,7 +1,6 @@
 package integration
 
 import (
-	"context"
 	"encoding/json"
 	"time"
 
@@ -19,20 +18,16 @@ var _ = Describe("PipelineRun Controller", Ordered, func() {
 	// BuildRuns, when a configured trigger matches the incoming object. The test scenarios also
 	// asserts the controller skips Custom-Tasks and incomplete PipelineRun instances
 	Context("PipelineRun instances will trigger BuildRuns", func() {
-		ctx := context.Background()
-
 		buildWithPipelineTrigger := stubs.ShipwrightBuildWithTriggers(
 			"shipwright.io/triggers",
 			"build-with-pipeline-trigger",
 			stubs.TriggerWhenPipelineSucceeded,
 		)
 
-		// amount of time to wait for the apiserver register a new object, and also wait for the
-		// controller actions before asserting the insistence of BuildRuns
-		gracefulWait := 3 * time.Second
-
 		BeforeAll(func() {
+			Expect(deleteAllBuildRuns()).Should(Succeed())
 			Expect(kubeClient.Create(ctx, buildWithPipelineTrigger)).Should(Succeed())
+			time.Sleep(gracefulWait)
 		})
 
 		AfterAll(func() {
@@ -42,7 +37,7 @@ var _ = Describe("PipelineRun Controller", Ordered, func() {
 
 		It("PipelineRun without status recorded won't trigger a BuildRun", func() {
 			pipelineRun := stubs.TektonPipelineRun(stubs.PipelineNameInTrigger)
-			Expect(createAndUpdatePipelineRun(ctx, pipelineRun)).Should(Succeed())
+			Expect(createAndUpdatePipelineRun(ctx, &pipelineRun)).Should(Succeed())
 
 			time.Sleep(gracefulWait)
 			eventuallyWithTimeoutFn(amountOfBuildRunsFn).Should(Equal(0))
@@ -53,7 +48,7 @@ var _ = Describe("PipelineRun Controller", Ordered, func() {
 		It("Custom-Task PipelineRun won't trigger a BuildRun", func() {
 			pipelineRun := stubs.TektonPipelineRunSucceeded(stubs.PipelineNameInTrigger)
 			pipelineRun.Status.PipelineSpec = stubs.TektonPipelineRunStatusCustomTaskShipwright
-			Expect(createAndUpdatePipelineRun(ctx, pipelineRun)).Should(Succeed())
+			Expect(createAndUpdatePipelineRun(ctx, &pipelineRun)).Should(Succeed())
 
 			time.Sleep(gracefulWait)
 			eventuallyWithTimeoutFn(amountOfBuildRunsFn).Should(Equal(0))
@@ -79,7 +74,7 @@ var _ = Describe("PipelineRun Controller", Ordered, func() {
 				filter.TektonPipelineRunName:            pipelineRun.GetName(),
 				filter.TektonPipelineRunTriggeredBuilds: string(annotationBytes),
 			})
-			Expect(createAndUpdatePipelineRun(ctx, pipelineRun)).Should(Succeed())
+			Expect(createAndUpdatePipelineRun(ctx, &pipelineRun)).Should(Succeed())
 
 			time.Sleep(gracefulWait)
 			eventuallyWithTimeoutFn(amountOfBuildRunsFn).Should(Equal(0))
@@ -89,11 +84,11 @@ var _ = Describe("PipelineRun Controller", Ordered, func() {
 
 		It("PipelineRun triggers a BuildRun", func() {
 			pipelineRun := stubs.TektonPipelineRunSucceeded(stubs.PipelineNameInTrigger)
-			Expect(createAndUpdatePipelineRun(ctx, pipelineRun)).Should(Succeed())
+			Expect(createAndUpdatePipelineRun(ctx, &pipelineRun)).Should(Succeed())
 
 			eventuallyWithTimeoutFn(amountOfBuildRunsFn).Should(Equal(1))
 
-			Eventually(func() bool {
+			eventuallyWithTimeoutFn(func() bool {
 				var pr tknv1beta1.PipelineRun
 				if err := kubeClient.Get(ctx, pipelineRun.GetNamespacedName(), &pr); err != nil {
 					return false
@@ -112,10 +107,7 @@ var _ = Describe("PipelineRun Controller", Ordered, func() {
 					[]string{buildWithPipelineTrigger.GetName()},
 					objectRef,
 				)
-			}).
-				WithPolling(time.Second).
-				WithTimeout(30 * time.Second).
-				Should(BeTrue())
+			}).Should(BeTrue())
 
 			Expect(kubeClient.Delete(ctx, &pipelineRun, deleteNowOpts)).Should(Succeed())
 		})

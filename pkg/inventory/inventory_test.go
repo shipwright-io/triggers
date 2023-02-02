@@ -145,6 +145,7 @@ func TestInventory_SearchForObjectRef(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			i := NewInventory()
 			for _, b := range tt.builds {
+				b := b
 				i.Add(&b)
 			}
 

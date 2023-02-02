@@ -45,7 +45,7 @@ func Test_searchBuildRunForRunOwner(t *testing.T) {
 	}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := searchBuildRunForRunOwner(tt.br); !reflect.DeepEqual(got, tt.want) {
+			if got := ExtractBuildRunOwner(tt.br); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("searchBuildRunForRunOwner() = %v, want %v", got, tt.want)
 			}
 		})

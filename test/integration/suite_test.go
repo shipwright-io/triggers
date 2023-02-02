@@ -10,6 +10,7 @@ import (
 	"github.com/shipwright-io/triggers/controllers"
 	"github.com/shipwright-io/triggers/pkg/inventory"
 
+	tknv1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"k8s.io/client-go/kubernetes/scheme"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -51,12 +52,12 @@ var _ = BeforeSuite(func() {
 	}
 
 	var err error
-	done := make(chan struct{}, 0)
+	started := make(chan struct{})
 	go func() {
 		cfg, err = testEnv.Start()
-		close(done)
+		close(started)
 	}()
-	Eventually(done).WithTimeout(time.Minute).Should(BeClosed())
+	Eventually(started).WithTimeout(time.Minute).Should(BeClosed())
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
@@ -67,6 +68,9 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 
 	err = tknv1beta1.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = tknv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	kubeClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
@@ -90,11 +94,18 @@ var _ = BeforeSuite(func() {
 	err = pipelineRunReconciler.SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
+	customTasksReconciler := controllers.NewCustomTasksReconciler(mgr.GetClient(), mgr.GetScheme())
+
+	err = customTasksReconciler.SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
 	go func() {
 		defer GinkgoRecover()
 		err = mgr.Start(ctx)
 		Expect(err).ToNot(HaveOccurred(), "failed to run manager")
 	}()
+
+	time.Sleep(gracefulWait)
 })
 
 var _ = AfterSuite(func() {

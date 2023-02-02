@@ -72,3 +72,13 @@ func ShipwrightBuildWithTriggers(
 	b.Spec.Trigger = &v1alpha1.Trigger{When: triggers}
 	return b
 }
+
+// ShipwrightBuildRun returns a empty BuildRun instance using informed name.
+func ShipwrightBuildRun(name string) *v1alpha1.BuildRun {
+	return &v1alpha1.BuildRun{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: Namespace,
+			Name:      name,
+		},
+	}
+}

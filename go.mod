@@ -9,7 +9,9 @@ require (
 	github.com/onsi/gomega v1.26.0
 	github.com/shipwright-io/build v0.11.0
 	github.com/tektoncd/pipeline v0.38.3
+	k8s.io/api v0.23.5
 	k8s.io/apimachinery v0.23.5
+	k8s.io/apiserver v0.23.5
 	k8s.io/client-go v0.23.5
 	knative.dev/pkg v0.0.0-20220329144915-0a1ec2e0d46c
 	sigs.k8s.io/controller-runtime v0.11.2
@@ -89,7 +91,6 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.23.5 // indirect
 	k8s.io/apiextensions-apiserver v0.23.5 // indirect
 	k8s.io/component-base v0.23.5 // indirect
 	k8s.io/klog/v2 v2.60.1-0.20220317184644-43cc75f9ae89 // indirect
