@@ -27,7 +27,7 @@ CONTROLLER_TOOLS_VERSION ?= v0.10.0
 CONTROLLER_GEN ?= $(LOCAL_BIN)/controller-gen
 
 # envtest version and full path to the executable
-ENVTEST_K8S_VERSION ?= 1.23
+ENVTEST_K8S_VERSION ?= 1.25
 ENVTEST ?= $(LOCAL_BIN)/setup-envtest
 
 # chart base directory and path to the "templates" folder
@@ -36,7 +36,7 @@ MANIFEST_DIR ?= $(CHART_DIR)/generated
 
 # shipwright and tekton target versions to download upstream crd resources
 SHIPWRIGHT_VERSION ?= v0.11.0
-TEKTON_VERSION ?= v0.38.3
+TEKTON_VERSION ?= v0.44.0
 
 # full path to the directory where the crds are downloaded
 CRD_DIR ?= $(LOCAL_BIN)/crds
