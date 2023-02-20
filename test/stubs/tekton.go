@@ -35,6 +35,29 @@ func TektonTaskRefToShipwright(name string) *tknv1beta1.TaskRef {
 	}
 }
 
+func TektonCustomRun(name string, ref *tknv1beta1.TaskRef) *tknv1beta1.CustomRun {
+	return &tknv1beta1.CustomRun{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: Namespace,
+			Name:      name,
+		},
+		Spec: tknv1beta1.CustomRunSpec{
+			CustomRef: ref,
+		},
+	}
+}
+
+// TektonCustomRunStarted returns a started (now) CustomRun instance using the name and TaskRef informed.
+func TektonCustomRunStarted(name string, ref *tknv1beta1.TaskRef) *tknv1beta1.CustomRun {
+	customRun := TektonCustomRun(name, ref)
+	customRun.Status = tknv1beta1.CustomRunStatus{
+		CustomRunStatusFields: tknv1beta1.CustomRunStatusFields{
+			StartTime: &metav1.Time{Time: time.Now()},
+		},
+	}
+	return customRun
+}
+
 func TektonRun(name string, ref *tknv1beta1.TaskRef) *tknv1alpha1.Run {
 	return &tknv1alpha1.Run{
 		ObjectMeta: metav1.ObjectMeta{

@@ -13,7 +13,6 @@ import (
 	tknv1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"k8s.io/client-go/kubernetes/scheme"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -61,7 +60,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	err = clientgoscheme.AddToScheme(scheme.Scheme)
+	err = scheme.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = v1alpha1.AddToScheme(scheme.Scheme)
@@ -94,9 +93,14 @@ var _ = BeforeSuite(func() {
 	err = pipelineRunReconciler.SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
-	customTasksReconciler := controllers.NewCustomTasksReconciler(mgr.GetClient(), mgr.GetScheme())
+	runReconciler := controllers.NewRunReconciler(mgr.GetClient(), mgr.GetScheme())
 
-	err = customTasksReconciler.SetupWithManager(mgr)
+	err = runReconciler.SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	customRunReconciler := controllers.NewCustomRunReconciler(mgr.GetClient(), mgr.GetScheme())
+
+	err = customRunReconciler.SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
 	go func() {

@@ -26,6 +26,28 @@ rules:
 - apiGroups:
   - tekton.dev
   resources:
+  - customruns
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - tekton.dev
+  resources:
+  - customruns/finalizers
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - tekton.dev
+  resources:
+  - customruns/status
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - tekton.dev
+  resources:
   - pipelineruns
   verbs:
   - get

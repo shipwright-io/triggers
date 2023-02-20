@@ -43,7 +43,7 @@ func runReferencesShipwright(run *tknv1alpha1.Run) bool {
 }
 
 // RunEventFilterPredicate inspects the object expecting a Tekton's Run, filtering out when is not
-// yet started, or has already being processed by the custom-tasks controller by instpecting the
+// yet started, or has already being processed by the custom-tasks controller by inspecting the
 // Status' ExtraFields.
 func RunEventFilterPredicate(obj client.Object) bool {
 	logger := loggerForClientObj(obj, "controller.run-filter")
@@ -51,7 +51,7 @@ func RunEventFilterPredicate(obj client.Object) bool {
 	br, ok := obj.(*v1alpha1.BuildRun)
 	if ok {
 		logger.V(0).Info("Inspecting BuildRun instance for Tekton's Run ownership")
-		return ExtractBuildRunOwner(br) != nil
+		return ExtractBuildRunRunOwner(br) != nil
 	}
 
 	// the custom-tasks controller watches over Tekton's Run and BuildRun objects, thus here we

@@ -8,7 +8,7 @@ import (
 	"github.com/shipwright-io/triggers/pkg/filter"
 
 	"github.com/go-logr/logr"
-	tknv1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
+	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -24,44 +24,44 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
-// CustomTasksReconciler watches over Tekton Run instances carrying a Shipwright Build reference,
+// CustomRunReconciler watches over Tekton CustomRun instances carrying a Shipwright Build reference,
 // that's the approach Tekton takes to Custom-Tasks, which makes possible to utilize third-party
 // controller resources.
-type CustomTasksReconciler struct {
+type CustomRunReconciler struct {
 	client.Client                 // kubernetes client
 	Scheme        *runtime.Scheme // shared scheme
 	Clock                         // local clock instance
 }
 
 //+kubebuilder:rbac:groups=shipwright.io,resources=buildruns,verbs=create;get;list;watch
-//+kubebuilder:rbac:groups=tekton.dev,resources=runs,verbs=get;list;watch
-//+kubebuilder:rbac:groups=tekton.dev,resources=runs/status,verbs=update;patch
-//+kubebuilder:rbac:groups=tekton.dev,resources=runs/finalizers,verbs=update;patch
+//+kubebuilder:rbac:groups=tekton.dev,resources=customruns,verbs=get;list;watch
+//+kubebuilder:rbac:groups=tekton.dev,resources=customruns/status,verbs=update;patch
+//+kubebuilder:rbac:groups=tekton.dev,resources=customruns/finalizers,verbs=update;patch
 
-// generateBuildRun generates a BuildRun instance owned by the informed Tekton Run object, the
+// generateBuildRun generates a BuildRun instance owned by the informed Tekton CustomRun object, the
 // BuildRun name is randomly generated using the Run's name as base.
-func (r *CustomTasksReconciler) generateBuildRun(
+func (r *CustomRunReconciler) generateBuildRun(
 	ctx context.Context,
-	run *tknv1alpha1.Run,
+	customRun *tknv1beta1.CustomRun,
 ) (*v1alpha1.BuildRun, error) {
 	br := v1alpha1.BuildRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: run.GetNamespace(),
-			Name:      names.SimpleNameGenerator.GenerateName(fmt.Sprintf("%s-", run.Name)),
+			Namespace: customRun.GetNamespace(),
+			Name:      names.SimpleNameGenerator.GenerateName(fmt.Sprintf("%s-", customRun.Name)),
 			Labels: map[string]string{
-				filter.OwnedByTektonRun: run.Name,
+				filter.OwnedByTektonCustomRun: customRun.Name,
 			},
 		},
 		Spec: v1alpha1.BuildRunSpec{
 			BuildRef: &v1alpha1.BuildRef{
-				APIVersion: &run.Spec.Ref.APIVersion,
-				Name:       run.Spec.Ref.Name,
+				APIVersion: &customRun.Spec.CustomRef.APIVersion,
+				Name:       customRun.Spec.CustomRef.Name,
 			},
-			ParamValues: filter.TektonRunParamsToShipwrightParamValues(run),
-			Timeout:     run.Spec.Timeout,
+			ParamValues: filter.TektonCustomRunParamsToShipwrightParamValues(customRun),
+			Timeout:     customRun.Spec.Timeout,
 		},
 	}
-	err := controllerutil.SetControllerReference(run, &br, r.Scheme)
+	err := controllerutil.SetControllerReference(customRun, &br, r.Scheme)
 	if err != nil {
 		return nil, err
 	}
@@ -69,16 +69,16 @@ func (r *CustomTasksReconciler) generateBuildRun(
 }
 
 // reflectBuildRunStatusOnTektonRun reflects the BuildRun status on the Run instance.
-func (r *CustomTasksReconciler) reflectBuildRunStatusOnTektonRun(
+func (r *CustomRunReconciler) reflectBuildRunStatusOnTektonCustomRun(
 	logger logr.Logger,
-	run *tknv1alpha1.Run,
+	customRun *tknv1beta1.CustomRun,
 	br *v1alpha1.BuildRun,
 ) {
 	if br.Status.CompletionTime != nil {
-		run.Status.CompletionTime = br.Status.CompletionTime
+		customRun.Status.CompletionTime = br.Status.CompletionTime
 	}
-	if run.Status.Conditions == nil {
-		run.Status.Conditions = knativev1.Conditions{}
+	if customRun.Status.Conditions == nil {
+		customRun.Status.Conditions = knativev1.Conditions{}
 	}
 
 	for _, c := range br.Status.Conditions {
@@ -94,7 +94,7 @@ func (r *CustomTasksReconciler) reflectBuildRunStatusOnTektonRun(
 			severity = apis.ConditionSeverityError
 		}
 
-		run.Status.SetCondition(&apis.Condition{
+		customRun.Status.SetCondition(&apis.Condition{
 			Type:               apis.ConditionType(string(c.Type)),
 			Status:             c.Status,
 			LastTransitionTime: apis.VolatileTime{Inner: c.LastTransitionTime},
@@ -104,8 +104,8 @@ func (r *CustomTasksReconciler) reflectBuildRunStatusOnTektonRun(
 		})
 	}
 
-	if len(run.Status.Conditions) == 0 {
-		run.Status.Conditions = []apis.Condition{{
+	if len(customRun.Status.Conditions) == 0 {
+		customRun.Status.Conditions = []apis.Condition{{
 			Type:               apis.ConditionSucceeded,
 			Status:             corev1.ConditionUnknown,
 			LastTransitionTime: apis.VolatileTime{Inner: metav1.Now()},
@@ -117,49 +117,49 @@ func (r *CustomTasksReconciler) reflectBuildRunStatusOnTektonRun(
 // BuildRun and taking advantage of Status.ExtraFields to record the BuildRun namespace/name. When
 // the ExtraFields is populated the controller uses the reference to reflect the BuildRun status
 // updates on the original Run instance.
-func (r *CustomTasksReconciler) Reconcile(
+func (r *CustomRunReconciler) Reconcile(
 	ctx context.Context,
 	req ctrl.Request,
 ) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
-	var run tknv1alpha1.Run
-	err := r.Get(ctx, req.NamespacedName, &run)
+	var customRun tknv1beta1.CustomRun
+	err := r.Get(ctx, req.NamespacedName, &customRun)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			logger.Error(err, "Unable to fetch Run")
 		}
 		return RequeueOnError(client.IgnoreNotFound(err))
 	}
-	originalRun := run.DeepCopy()
+	originalCustomRun := customRun.DeepCopy()
 
 	// making sure the current run object status is recorded in the logs
-	logger = logger.WithValues("successful", run.IsSuccessful(), "cancelled", run.IsCancelled())
+	logger = logger.WithValues("successful", customRun.IsSuccessful(), "cancelled", customRun.IsCancelled())
 
-	// when the run instace is marked as done, no further actions needs to take place
-	if run.IsDone() {
+	// when the customRun instance is marked as done, no further actions needs to take place
+	if customRun.IsDone() {
 		logger.V(0).Info("Tekton Run is synchronized, all done!")
 		return Done()
 	}
 
-	// extracting the meta-information recorded in the Tekton Run status, in this section the name of
+	// extracting the meta-information recorded in the Tekton CustomRun status, in this section the name of
 	// the BuildRun issued for the object is recorded
 	var extraFields filter.ExtraFields
-	if err := run.Status.DecodeExtraFields(&extraFields); err != nil {
+	if err := customRun.Status.DecodeExtraFields(&extraFields); err != nil {
 		logger.V(0).Error(err, "Trying to decode Run Status' ExtraFields")
 		return RequeueOnError(err)
 	}
 
 	var br = &v1alpha1.BuildRun{}
 	// when the status extra-fields is empty, it means the BuildRun instance is not created yet, thus
-	// the first step is issueing the instance and later on watching over its status updates
+	// the first step is issuing the instance and later on watching over its status updates
 	if extraFields.IsEmpty() {
-		if run.IsCancelled() {
-			logger.V(0).Info("Tekton Run is cancelled, skipping issuing a BuildRun!")
+		if customRun.IsCancelled() {
+			logger.V(0).Info("Tekton CustomRun is cancelled, skipping issuing a BuildRun!")
 			return Done()
 		}
 
-		if br, err = r.generateBuildRun(ctx, &run); err != nil {
+		if br, err = r.generateBuildRun(ctx, &customRun); err != nil {
 			logger.V(0).Error(err, "Issuing BuildRun returned error")
 			return RequeueOnError(err)
 		}
@@ -167,19 +167,19 @@ func (r *CustomTasksReconciler) Reconcile(
 
 		// recording the BuildRun namespace and name using ExtraFields
 		extraFields = filter.NewExtraFields(br)
-		if err = run.Status.EncodeExtraFields(&extraFields); err != nil {
+		if err = customRun.Status.EncodeExtraFields(&extraFields); err != nil {
 			logger.V(0).Error(err, "Encoding Tekton's ExtraFields")
 			return RequeueOnError(err)
 		}
 		now := metav1.Now()
-		run.Status.StartTime = &now
+		customRun.Status.StartTime = &now
 
 		// storing the ExtraFields on the Tekton Run instance status
-		if err = r.Client.Status().Patch(ctx, &run, client.MergeFrom(originalRun)); err != nil {
-			logger.V(0).Error(err, "trying to patch Tekton Run status")
+		if err = r.Client.Status().Patch(ctx, &customRun, client.MergeFrom(originalCustomRun)); err != nil {
+			logger.V(0).Error(err, "trying to patch Tekton CustomRun status")
 			return RequeueOnError(err)
 		}
-		logger.V(0).Info("Tekton Run Status ExtraFields updated with BuildRun coordinates")
+		logger.V(0).Info("Tekton CustomRun Status ExtraFields updated with BuildRun coordinates")
 
 		if err = r.Client.Create(ctx, br); err != nil {
 			logger.V(0).Error(err, "Trying to create a new BuildRun instance")
@@ -196,8 +196,8 @@ func (r *CustomTasksReconciler) Reconcile(
 			return RequeueOnError(err)
 		}
 
-		if run.IsCancelled() && !br.IsCanceled() {
-			logger.V(0).Info("Tekton Run instance is cancelled, cancelling the BuildRun too")
+		if customRun.IsCancelled() && !br.IsCanceled() {
+			logger.V(0).Info("Tekton CustomRun instance is cancelled, cancelling the BuildRun too")
 
 			originalBr := br.DeepCopy()
 			br.Spec.State = v1alpha1.BuildRunRequestedStatePtr(v1alpha1.BuildRunStateCancel)
@@ -207,11 +207,11 @@ func (r *CustomTasksReconciler) Reconcile(
 			}
 		} else {
 			// reflecting BuildRuns' status conditions on the Tekton Run owner instance
-			r.reflectBuildRunStatusOnTektonRun(logger, &run, br)
+			r.reflectBuildRunStatusOnTektonCustomRun(logger, &customRun, br)
 
-			logger.V(0).Info("Updating Tekton Run instance status...")
-			if err = r.Client.Status().Patch(ctx, &run, client.MergeFrom(originalRun)); err != nil {
-				logger.V(0).Error(err, "trying to patch Tekton Run status")
+			logger.V(0).Info("Updating Tekton CustomRun instance status...")
+			if err = r.Client.Status().Patch(ctx, &customRun, client.MergeFrom(originalCustomRun)); err != nil {
+				logger.V(0).Error(err, "trying to patch Tekton CustomRun status")
 				return RequeueOnError(err)
 			}
 		}
@@ -221,18 +221,18 @@ func (r *CustomTasksReconciler) Reconcile(
 }
 
 // SetupWithManager instantiate this controller using controller runtime manager.
-func (r *CustomTasksReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *CustomRunReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if r.Clock == nil {
 		r.Clock = realClock{}
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
 		// watches Tekton Run instances, that's the principal resource for this controller
-		For(&tknv1alpha1.Run{}).
+		For(&tknv1beta1.CustomRun{}).
 		// it also watches over BuildRun instances that are owned by this controller
 		Owns(&v1alpha1.BuildRun{}).
 		// filtering out objects that aren't ready for reconciliation
-		WithEventFilter(predicate.NewPredicateFuncs(filter.RunEventFilterPredicate)).
+		WithEventFilter(predicate.NewPredicateFuncs(filter.CustomRunEventFilterPredicate)).
 		// making sure the controller reconciles one instance at the time in order to not create a
 		// race between the two resources being watched by this controller, Tekton Run and BuildRun
 		// instances
@@ -240,12 +240,12 @@ func (r *CustomTasksReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-// NewCustomTasksReconciler instantiate the CustomTasksReconciler.
-func NewCustomTasksReconciler(
+// NewCustomRunReconciler instantiate the CustomRunReconciler.
+func NewCustomRunReconciler(
 	ctrlClient client.Client,
 	scheme *runtime.Scheme,
-) *CustomTasksReconciler {
-	return &CustomTasksReconciler{
+) *CustomRunReconciler {
+	return &CustomRunReconciler{
 		Client: ctrlClient,
 		Scheme: scheme,
 	}

@@ -19,6 +19,8 @@ import (
 const Prefix = "triggers.shipwright.io"
 
 var (
+	// OwnedByTektonRun annotates the BuildRun as owned by Tekton CustomRun.
+	OwnedByTektonCustomRun = fmt.Sprintf("%s/owned-by-customrun", Prefix)
 	// OwnedByTektonRun annotates the BuildRun as owned by Tekton Run.
 	OwnedByTektonRun = fmt.Sprintf("%s/owned-by-run", Prefix)
 	// OwnedByTektonPipelineRun lables the BuildRun as owned by Tekton PipelineRun.

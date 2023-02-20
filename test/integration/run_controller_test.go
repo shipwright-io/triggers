@@ -19,8 +19,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Custom-Tasks Controller", Ordered, func() {
-	// asserts the CustomTasksReconciler is able to watch Tekton Run instances, and trigger BuildRuns
+var _ = Describe("Run Controller", Ordered, Serial, func() {
+	// asserts the RunReconciler is able to watch Tekton Run instances, and trigger BuildRuns
 	// for the pipelines using Shipwright Builds, as well as updating the Tekton Run status as the
 	// BuildRun progresses.
 	Context("Tekton Run", func() {
@@ -31,13 +31,13 @@ var _ = Describe("Custom-Tasks Controller", Ordered, func() {
 		// assertTektonRunCustomTask asserts the Tekton Run Status ExtraFields is recorded with
 		// coordinates to a existing BuildRun instance.
 		assertTektonRunCustomTask := func(runNamespacedName types.NamespacedName) error {
-			brNamespacedName, err := extractBuildRunNamespacedNameFromExtraFields(runNamespacedName)
+			brNamespacedName, err := extractBuildRunNamespacedNameFromRunExtraFields(runNamespacedName)
 			if err != nil {
 				return err
 			}
 
 			return assertBuildRun(*brNamespacedName, func(br *v1alpha1.BuildRun) error {
-				brOwner := filter.ExtractBuildRunOwner(br)
+				brOwner := filter.ExtractBuildRunRunOwner(br)
 				if brOwner == nil {
 					return fmt.Errorf("BuildRun doesn't have the owner set")
 				}
@@ -102,7 +102,7 @@ var _ = Describe("Custom-Tasks Controller", Ordered, func() {
 			var brNamespacedName *types.NamespacedName
 			eventuallyWithTimeoutFn(func() error {
 				var err error
-				brNamespacedName, err = extractBuildRunNamespacedNameFromExtraFields(runNamespacedName)
+				brNamespacedName, err = extractBuildRunNamespacedNameFromRunExtraFields(runNamespacedName)
 				if err != nil {
 					return err
 				}
@@ -180,7 +180,7 @@ var _ = Describe("Custom-Tasks Controller", Ordered, func() {
 
 		It("Run instance with Shipwright TaskRef, BuildRun expected", func() {
 			shipwrightTaskRef := stubs.TektonTaskRefToShipwright(build.GetName())
-			run := stubs.TektonRunStarted("invokes-shipwright", shipwrightTaskRef)
+			run := stubs.TektonRunStarted("invokes-shipwright-run", shipwrightTaskRef)
 
 			brNamespacedName := testTektonRunTriggersBuildRun(run)
 
@@ -188,6 +188,8 @@ var _ = Describe("Custom-Tasks Controller", Ordered, func() {
 			// Build Controller would do
 			lastTransitionTime := metav1.Now()
 			go func() {
+				defer GinkgoRecover()
+
 				time.Sleep(gracefulWait)
 
 				By(fmt.Sprintf(
@@ -217,11 +219,13 @@ var _ = Describe("Custom-Tasks Controller", Ordered, func() {
 
 		It("Failed BuildRun status is reflected on Tekton Run", func() {
 			shipwrightTaskRef := stubs.TektonTaskRefToShipwright(build.GetName())
-			run := stubs.TektonRunStarted("invokes-shipwright", shipwrightTaskRef)
+			run := stubs.TektonRunStarted("invokes-shipwright-run", shipwrightTaskRef)
 
 			brNamespacedName := testTektonRunTriggersBuildRun(run)
 
 			go func() {
+				defer GinkgoRecover()
+
 				time.Sleep(gracefulWait)
 
 				By(fmt.Sprintf(
@@ -253,11 +257,13 @@ var _ = Describe("Custom-Tasks Controller", Ordered, func() {
 
 		It("Canceled Tekton Run is reflected on the BuildRun", func() {
 			shipwrightTaskRef := stubs.TektonTaskRefToShipwright(build.GetName())
-			run := stubs.TektonRunStarted("invokes-shipwright", shipwrightTaskRef)
+			run := stubs.TektonRunStarted("invokes-shipwright-run", shipwrightTaskRef)
 
 			brNamespacedName := testTektonRunTriggersBuildRun(run)
 
 			go func() {
+				defer GinkgoRecover()
+
 				time.Sleep(gracefulWait)
 
 				By(fmt.Sprintf("Canceling the Tekton Run %q", run.GetName()))
