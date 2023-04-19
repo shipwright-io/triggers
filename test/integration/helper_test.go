@@ -10,7 +10,6 @@ import (
 	"github.com/shipwright-io/triggers/test/stubs"
 	"k8s.io/apimachinery/pkg/types"
 
-	tknv1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -37,17 +36,6 @@ func assertTektonCustomRun(runNamespacedName types.NamespacedName, fn TektonCust
 		return err
 	}
 	return fn(&customRun)
-}
-
-type TektonRunAssertFn func(run *tknv1alpha1.Run) error
-
-// assertTektonRun retrieves the Tekton Run instance and execute the informed func with it.
-func assertTektonRun(runNamespacedName types.NamespacedName, fn TektonRunAssertFn) error {
-	var run tknv1alpha1.Run
-	if err := kubeClient.Get(ctx, runNamespacedName, &run); err != nil {
-		return err
-	}
-	return fn(&run)
 }
 
 type BuildRunAssertFn func(br *v1alpha1.BuildRun) error
@@ -112,8 +100,8 @@ func createAndUpdatePipelineRun(ctx context.Context, pipelineRun *tknv1beta1.Pip
 	return kubeClient.Status().Update(ctx, &created)
 }
 
-// createAndUpdateCustomRun creates and updates a Run instance, using the same workaround described on
-// createAndUpdatePipelineRun function.
+// createAndUpdateCustomRun creates and updates a Run instance, using the same workaround described
+// on createAndUpdatePipelineRun function.
 func createAndUpdateCustomRun(ctx context.Context, customRun *tknv1beta1.CustomRun) error {
 	err := kubeClient.Create(ctx, customRun)
 	if err != nil {
@@ -129,52 +117,8 @@ func createAndUpdateCustomRun(ctx context.Context, customRun *tknv1beta1.CustomR
 	return kubeClient.Status().Patch(ctx, &created, client.MergeFrom(originalRun))
 }
 
-// createAndUpdateRun creates and updates a Run instance, using the same workaround described on
-// createAndUpdatePipelineRun function.
-func createAndUpdateRun(ctx context.Context, run *tknv1alpha1.Run) error {
-	err := kubeClient.Create(ctx, run)
-	if err != nil {
-		return err
-	}
-
-	var created tknv1alpha1.Run
-	if err = kubeClient.Get(ctx, client.ObjectKeyFromObject(run), &created); err != nil {
-		return err
-	}
-	originalRun := created.DeepCopy()
-	created.Status = *run.Status.DeepCopy()
-	return kubeClient.Status().Patch(ctx, &created, client.MergeFrom(originalRun))
-}
-
-// extractBuildRunNamespacedNameFromRunExtraFields extracts the BuildRun name from the informed Tekton
-// Run reference. It asserts the ExtraFields is populated as expected.
-func extractBuildRunNamespacedNameFromRunExtraFields(
-	runNamespacedName types.NamespacedName,
-) (*types.NamespacedName, error) {
-	var run tknv1alpha1.Run
-	err := kubeClient.Get(ctx, runNamespacedName, &run)
-	if err != nil {
-		return nil, err
-	}
-
-	if run.Status.ExtraFields.Size() == 0 {
-		return nil, fmt.Errorf("Run's ExtraFields is not populated")
-	}
-
-	var extraFields filter.ExtraFields
-	if err := run.Status.DecodeExtraFields(&extraFields); err != nil {
-		return nil, err
-	}
-	if extraFields.IsEmpty() {
-		return nil, fmt.Errorf("attribute ExtraFields is empty")
-	}
-
-	namespacedName := extraFields.GetNamespacedName()
-	return &namespacedName, nil
-}
-
-// extractBuildRunNamespacedNameFromCustomRunExtraFields extracts the BuildRun name from the informed Tekton
-// CustomRun reference. It asserts the ExtraFields is populated as expected.
+// extractBuildRunNamespacedNameFromCustomRunExtraFields extracts the BuildRun name from the informed
+// Tekton CustomRun reference. It asserts the ExtraFields is populated as expected.
 func extractBuildRunNamespacedNameFromCustomRunExtraFields(
 	runNamespacedName types.NamespacedName,
 ) (*types.NamespacedName, error) {

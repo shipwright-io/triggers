@@ -10,7 +10,6 @@ import (
 	"github.com/shipwright-io/triggers/controllers"
 	"github.com/shipwright-io/triggers/pkg/inventory"
 
-	tknv1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -69,9 +68,6 @@ var _ = BeforeSuite(func() {
 	err = tknv1beta1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = tknv1alpha1.AddToScheme(scheme.Scheme)
-	Expect(err).NotTo(HaveOccurred())
-
 	kubeClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
 	Expect(err).NotTo(HaveOccurred())
 	Expect(kubeClient).NotTo(BeNil())
@@ -91,11 +87,6 @@ var _ = BeforeSuite(func() {
 		mgr.GetClient(), mgr.GetScheme(), buildInventory)
 
 	err = pipelineRunReconciler.SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	runReconciler := controllers.NewRunReconciler(mgr.GetClient(), mgr.GetScheme())
-
-	err = runReconciler.SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
 	customRunReconciler := controllers.NewCustomRunReconciler(mgr.GetClient(), mgr.GetScheme())
