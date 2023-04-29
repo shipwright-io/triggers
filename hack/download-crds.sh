@@ -34,7 +34,6 @@ declare -a TEKTON_CRD_FILES=(
 	300-pipeline.yaml
 	300-resolutionrequest.yaml
 	300-resource.yaml
-	300-run.yaml
 	300-taskrun.yaml
 	300-task.yaml
 	300-verificationpolicy.yaml

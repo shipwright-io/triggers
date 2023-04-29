@@ -6,7 +6,6 @@ import (
 
 	"github.com/shipwright-io/triggers/pkg/constants"
 
-	tknv1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -47,7 +46,8 @@ func TektonCustomRun(name string, ref *tknv1beta1.TaskRef) *tknv1beta1.CustomRun
 	}
 }
 
-// TektonCustomRunStarted returns a started (now) CustomRun instance using the name and TaskRef informed.
+// TektonCustomRunStarted returns a started (now) CustomRun instance using the name and TaskRef
+// informed.
 func TektonCustomRunStarted(name string, ref *tknv1beta1.TaskRef) *tknv1beta1.CustomRun {
 	customRun := TektonCustomRun(name, ref)
 	customRun.Status = tknv1beta1.CustomRunStatus{
@@ -56,29 +56,6 @@ func TektonCustomRunStarted(name string, ref *tknv1beta1.TaskRef) *tknv1beta1.Cu
 		},
 	}
 	return customRun
-}
-
-func TektonRun(name string, ref *tknv1beta1.TaskRef) *tknv1alpha1.Run {
-	return &tknv1alpha1.Run{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: Namespace,
-			Name:      name,
-		},
-		Spec: tknv1alpha1.RunSpec{
-			Ref: ref,
-		},
-	}
-}
-
-// TektonRunStarted returns a started (now) run instance using the name and TaskRef informed.
-func TektonRunStarted(name string, ref *tknv1beta1.TaskRef) *tknv1alpha1.Run {
-	run := TektonRun(name, ref)
-	run.Status = tknv1alpha1.RunStatus{
-		RunStatusFields: tknv1alpha1.RunStatusFields{
-			StartTime: &metav1.Time{Time: time.Now()},
-		},
-	}
-	return run
 }
 
 func TektonPipelineRunCanceled(name string) tknv1beta1.PipelineRun {
