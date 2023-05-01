@@ -8,10 +8,10 @@ import (
 
 	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
 	"github.com/shipwright-io/triggers/pkg/constants"
+	clock "k8s.io/utils/clock/testing"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
-	"k8s.io/apimachinery/pkg/util/clock"
 	"knative.dev/pkg/apis"
 )
 
@@ -19,6 +19,8 @@ import (
 const Prefix = "triggers.shipwright.io"
 
 var (
+	// OwnedByTektonRun annotates the BuildRun as owned by Tekton CustomRun.
+	OwnedByTektonCustomRun = fmt.Sprintf("%s/owned-by-customrun", Prefix)
 	// OwnedByTektonRun annotates the BuildRun as owned by Tekton Run.
 	OwnedByTektonRun = fmt.Sprintf("%s/owned-by-run", Prefix)
 	// OwnedByTektonPipelineRun lables the BuildRun as owned by Tekton PipelineRun.

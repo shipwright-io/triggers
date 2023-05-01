@@ -29,13 +29,14 @@ declare -a SHIPWRIGHT_CRD_FILES=(
 # list of tekton crd files to be downloaded from the repository
 declare -a TEKTON_CRD_FILES=(
 	300-clustertask.yaml
+	300-customrun.yaml
 	300-pipelinerun.yaml
 	300-pipeline.yaml
 	300-resolutionrequest.yaml
 	300-resource.yaml
-	300-run.yaml
 	300-taskrun.yaml
 	300-task.yaml
+	300-verificationpolicy.yaml
 )
 
 # executes curl with flags against the informed url, saves the payload on the output directory

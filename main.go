@@ -8,7 +8,6 @@ import (
 	"github.com/shipwright-io/triggers/controllers"
 	"github.com/shipwright-io/triggers/pkg/inventory"
 
-	tknv1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -32,7 +31,6 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
 	utilruntime.Must(tknv1beta1.AddToScheme(scheme))
-	utilruntime.Must(tknv1alpha1.AddToScheme(scheme))
 }
 
 func main() {
@@ -89,10 +87,6 @@ func main() {
 		mgr.GetScheme(),
 		buildInventory,
 	)
-	customTasksReconciler := controllers.NewCustomTasksReconciler(
-		mgr.GetClient(),
-		mgr.GetScheme(),
-	)
 
 	if err = inventoryReconciler.SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to bootstrap controller", "controller", "Inventory")
@@ -102,8 +96,13 @@ func main() {
 		setupLog.Error(err, "unable to bootstrap controller", "controller", "PipelineRun")
 		os.Exit(1)
 	}
-	if err = customTasksReconciler.SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to bootstrap controller", "controller", "CustomTasks")
+
+	customRunReconciler := controllers.NewCustomRunReconciler(
+		mgr.GetClient(),
+		mgr.GetScheme(),
+	)
+	if err = customRunReconciler.SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to bootstrap controller", "controller", "CustomRun")
 		os.Exit(1)
 	}
 
