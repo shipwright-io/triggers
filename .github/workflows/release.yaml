@@ -1,0 +1,70 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'Desired tag'
+        required: true 
+      tags:
+        description: 'Previous tag'
+        required: true
+jobs:
+  release:
+    if: ${{ github.repository == 'shipwright-io/build' }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # To be able to get OIDC ID token to sign images.
+      contents: write  # To be able to update releases.
+      packages: write  # To be able to push images and signatures.
+
+    env:
+      IMAGE_HOST: ghcr.io
+      IMAGE_NAMESPACE: ${{ github.repository }}
+      TAG: ${{ github.event.inputs.release }}
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ./.github/actions/setup
+    - uses: sigstore/cosign-installer@v3
+    - uses: azure/setup-helm@v3.5
+      with:
+        version: v3.8.0
+
+    - name: Build Release Changelog
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PREVIOUS_TAG: ${{ github.event.inputs.tags }}
+      run: |
+        export GITHUB_TOKEN
+        export PREVIOUS_TAG
+        "${GITHUB_WORKSPACE}/.github/draft_release_notes.sh"
+
+    - name: Draft release
+      id: draft_release
+      uses: actions/create-release@v1
+      with:
+        release_name: "Shipwright Build release ${{ github.event.inputs.release }}"
+        tag_name: ${{ github.event.inputs.release }}
+        body_path: Changes.md
+        draft: true
+        prerelease: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+    - name: Generate and upload release.yaml
+      env:
+        REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        REGISTRY_USERNAME: ${{ github.repository_owner }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        make release
+        gh release upload ${TAG} release.yaml
+
+    - name: Sign released images
+      run: |
+        grep -o "ghcr.io[^\"]*" release.yaml | xargs cosign sign --yes \
+            -a sha=${{ github.sha }} \
+            -a run_id=${{ github.run_id }} \
+            -a run_attempt=${{ github.run_attempt }}
+  

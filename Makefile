@@ -21,6 +21,7 @@ NAMESPACE ?= shipwright-build
 # ko base image repository and options
 IMAGE_HOST ?= ghcr.io
 IMAGE_NAMESPACE ?= shipwright-io/triggers
+KO_DOCKER_REPO ?= $(IMAGE_HOST)/$(IMAGE_NAMESPACE)
 KO_OPTS ?= --base-import-paths --tags=${IMAGE_TAG}
 
 # controller-gen version and full path to the executable
@@ -46,6 +47,15 @@ CRD_DIR ?= $(LOCAL_BIN)/crds
 ARGS ?=
 
 .EXPORT_ALL_VARIABLES:
+
+# uses helm to render the resource templates to the stdout
+define render-template
+    @helm template \
+		--namespace=$(NAMESPACE) \
+		--set="image.name=ko://github.com/shipwright-io/triggers" \
+		shipwright-triggers \
+		$(CHART_DIR)
+endef
 
 default: build
 
@@ -87,29 +97,21 @@ run: manifests
 .PHONY: container-build
 container-build: CGO_ENABLED=0
 container-build:
-	KO_DOCKER_REPO="$(IMAGE_HOST)/$(IMAGE_NAMESPACE)" GOFLAGS="${GOFLAGS} ko build --push=false $(KO_OPTS) $(ARGS) .
+	ko build --push=false $(KO_OPTS) $(ARGS) .
 
 # uses helm to render kubernetes manifests and ko for the container image
 .PHONY: deploy
 deploy: CGO_ENABLED=0
 deploy:
-	helm template \
-		--namespace=$(NAMESPACE) \
-		--set="image.name=ko://github.com/shipwright-io/triggers" \
-		shipwright-triggers \
-		$(CHART_DIR) | \
-			KO_DOCKER_REPO="$(IMAGE_HOST)/$(IMAGE_NAMESPACE)" GOFLAGS="${GOFLAGS} ko apply $(KO_OPTS) $(ARGS) --filename -
+	$(call render-template) | \
+			ko apply $(KO_OPTS) $(ARGS) --filename -
 
 # uses helm to create a package and ko for the container image
 .PHONY: release
 release: CGO_ENABLED=0
 release:
-	helm template \
-		--namespace=$(NAMESPACE) \
-		--set="image.name=ko://github.com/shipwright-io/triggers" \
-		shipwright-triggers \
-		$(CHART_DIR)| \
-			KO_DOCKER_REPO="$(IMAGE_HOST)/$(IMAGE_NAMESPACE)" GOFLAGS="${GOFLAGS} ko resolve $(KO_OPTS) $(ARGS) --platform=all -R -f - > release.yaml
+	$(call render-template) | \
+			ko resolve $(KO_OPTS) $(ARGS) --platform=all -R -f - > release.yaml
 
 # runs the unit tests, with optional arguments
 .PHONY: test-unit
