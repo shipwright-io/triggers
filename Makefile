@@ -74,8 +74,9 @@ $(CONTROLLER_GEN):
 .PHONY: manifests
 manifests: controller-gen
 	$(CONTROLLER_GEN) \
-		rbac:roleName=shipwright-trigger crd paths="./..." \
-		output:dir=$(MANIFEST_DIR)
+		rbac:roleName=shipwright-triggers  webhook paths="./..." \
+		output:dir=deploy/
+	mv deploy/role.yaml deploy/200-role.yaml
 
 # runs the manager from your host
 .PHONY: run
@@ -98,6 +99,9 @@ deploy:
 		shipwright-triggers \
 		$(CHART_DIR) | \
 			ko apply $(KO_OPTS) $(ARGS) --filename -
+
+release: manifests
+	hack/release.sh
 
 # runs the unit tests, with optional arguments
 .PHONY: test-unit

@@ -1,0 +1,52 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shipwright-triggers
+  namespace: shipwright-build
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: shipwright-triggers
+  template:
+    metadata:
+      labels:
+        name: shipwright-triggers
+    spec:
+      serviceAccountName: shipwright-triggers
+      containers:
+        - name: shipwright-trigger
+          image: ko://github.com/shipwright-io/triggers
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: BUILD_CONTROLLER_LEADER_ELECTION_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: CONTROLLER_NAME
+              value: "shipwright-build"
+            - name: GIT_ENABLE_REWRITE_RULE
+              value: "false"
+          ports:
+            - containerPort: 8080
+              name: metrics-port
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics-port
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics-port
+            initialDelaySeconds: 5
+            periodSeconds: 10
