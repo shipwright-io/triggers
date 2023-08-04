@@ -19,7 +19,9 @@ CGO_ENABLED ?= 0
 NAMESPACE ?= shipwright-build
 
 # ko base image repository and options
-KO_DOCKER_REPO ?= $(IMAGE_BASE)
+IMAGE_HOST ?= ghcr.io
+IMAGE_NAMESPACE ?= shipwright-io/triggers
+KO_DOCKER_REPO ?= $(IMAGE_HOST)/$(IMAGE_NAMESPACE)
 KO_OPTS ?= --base-import-paths --tags=${IMAGE_TAG}
 
 # controller-gen version and full path to the executable
@@ -45,6 +47,15 @@ CRD_DIR ?= $(LOCAL_BIN)/crds
 ARGS ?=
 
 .EXPORT_ALL_VARIABLES:
+
+# uses helm to render the resource templates to the stdout
+define render-template
+    @helm template \
+		--namespace=$(NAMESPACE) \
+		--set="image.name=ko://github.com/shipwright-io/triggers" \
+		shipwright-triggers \
+		$(CHART_DIR)
+endef
 
 default: build
 
@@ -92,12 +103,15 @@ container-build:
 .PHONY: deploy
 deploy: CGO_ENABLED=0
 deploy:
-	helm template \
-		--namespace=$(NAMESPACE) \
-		--set="image.name=ko://github.com/shipwright-io/triggers" \
-		shipwright-triggers \
-		$(CHART_DIR) | \
+	$(call render-template) | \
 			ko apply $(KO_OPTS) $(ARGS) --filename -
+
+# uses helm to create a package and ko for the container image
+.PHONY: release
+release: CGO_ENABLED=0
+release:
+	$(call render-template) | \
+			ko resolve $(KO_OPTS) $(ARGS) --platform=all -R -f - > release.yaml
 
 # runs the unit tests, with optional arguments
 .PHONY: test-unit
