@@ -149,3 +149,12 @@ act:
 .PHONY: clean
 clean:
 	rm -rf "$(LOCAL_BIN)" || true
+
+# calls everything that generates files
+.PHONY: generate
+generate: manifests
+	./hack/generate-copyright.sh
+
+.PHONY: verify-generate
+verify-generate: generate
+	./hack/verify-generate.sh

@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+
+# Copyright The Shipwright Contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # Downloads the Custom Resource Definitions direcly from the Build and Tekton's GitHub repositories,
 # using `curl` to manage this task.

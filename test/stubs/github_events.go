@@ -1,9 +1,13 @@
+// Copyright The Shipwright Contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package stubs
 
 import (
 	"time"
 
-	"github.com/google/go-github/v42/github"
+	"github.com/google/go-github/v53/github"
 )
 
 var RepoURL = "https://github.com/shipwright-io/sample-nodejs"
