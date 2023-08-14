@@ -1,4 +1,4 @@
-name: verify
+name: Verify
 
 on:
   push:
@@ -14,12 +14,27 @@ permissions:
   contents: read
 
 jobs:
-  verify:
-    name: verify-generate
+  generate:
     runs-on: ubuntu-latest
+    name: generate
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
     - uses: ./.github/actions/setup
+
     - name: Run verify-generate
       run: |
         make verify-generate
+
+  golangci-lint:
+    runs-on: ubuntu-latest
+    name: golangci-lint
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v3
+      with:
+        args: --timeout=10m

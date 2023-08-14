@@ -1,12 +1,17 @@
 ---
 name: setup
 description: set up the stage for building and testing
+inputs:
+  go-version:
+    description: "The Go version to download (if necessary) and use. Supports semver spec and ranges. Be sure to enclose this option in single quotation marks."
+    required: false
+    default: "1.20"
 runs:
   using: composite
   steps:
     - uses: actions/setup-go@v3
       with:
-        go-version: 1.20.x
+        go-version: ${{ inputs.go-version }}
         cache: true
         check-latest: true
     - uses: ko-build/setup-ko@v0.6

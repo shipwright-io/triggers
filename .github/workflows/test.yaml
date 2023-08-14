@@ -1,5 +1,4 @@
----
-name: test
+name: Test
 
 on:
   push:
@@ -12,23 +11,24 @@ on:
       - main
 
 jobs:
-  test-unit:
-    name: test-unit
+  unit:
     runs-on: ubuntu-latest
+    name: unit
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/setup
-
+        with:
+          go-version: '1.20.x'
       - name: test-unit
         run: make test-unit
-
-  test-integration:
-    name: test-integration
+  integration:
     runs-on: ubuntu-latest
+    name: integration
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/setup
-
+        with:
+          go-version: '1.20.x'
       - name: test-integration
         run: make test-integration
 
