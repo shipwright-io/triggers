@@ -10,7 +10,7 @@ import (
 
 // SearchResult contains a Inventory result item.
 type SearchResult struct {
-	BuildName  types.NamespacedName // build name maching criteria
+	BuildName  types.NamespacedName // build name matching criteria
 	SecretName types.NamespacedName // respective secret coordinates (for webhook)
 }
 
