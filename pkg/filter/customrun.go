@@ -16,7 +16,7 @@ import (
 // ParamValues slice.
 func TektonCustomRunParamsToShipwrightParamValues(customRun *tknv1beta1.CustomRun) []v1alpha1.ParamValue {
 	paramValues := []v1alpha1.ParamValue{}
-	for _, p := range customRun.Spec.Params {
+	for i, p := range customRun.Spec.Params {
 		paramValue := v1alpha1.ParamValue{Name: p.Name}
 		if p.Value.Type == tknv1beta1.ParamTypeArray {
 			paramValue.Values = []v1alpha1.SingleValue{}
@@ -28,7 +28,7 @@ func TektonCustomRunParamsToShipwrightParamValues(customRun *tknv1beta1.CustomRu
 			}
 		} else {
 			paramValue.SingleValue = &v1alpha1.SingleValue{
-				Value: &p.Value.StringVal,
+				Value: &customRun.Spec.Params[i].Value.StringVal,
 			}
 		}
 		paramValues = append(paramValues, paramValue)

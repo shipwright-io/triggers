@@ -38,7 +38,7 @@ var (
 	TektonPipelineRunTriggeredBuilds = fmt.Sprintf("%s/pipelinerun-triggered-builds", Prefix)
 )
 
-// pipelineRunReferencesShipwright checks if the informed PipelineRun is reffering to a Shipwright
+// pipelineRunReferencesShipwright checks if the informed PipelineRun is referring to a Shipwright
 // resource via TaskRef.
 func pipelineRunReferencesShipwright(pipelineRun *tknv1beta1.PipelineRun) bool {
 	if pipelineRun.Status.PipelineSpec == nil {

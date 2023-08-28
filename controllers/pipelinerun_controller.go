@@ -137,7 +137,7 @@ func (r *PipelineRunReconciler) Reconcile(
 	var triggeredBuilds = []filter.TriggeredBuild{}
 	if filter.PipelineRunAnnotatedNameMatchesObject(&pipelineRun) {
 		// extracting existing triggered-builds from the annotation, information needed to detect if
-		// the BuildRuns have already beeing issued for the PipelineRun
+		// the BuildRuns have already been issued for the PipelineRun
 		triggeredBuilds, err = filter.PipelineRunExtractTriggeredBuildsSlice(&pipelineRun)
 		if err != nil {
 			logger.V(0).Error(err, "parsing triggered-builds annotation")
