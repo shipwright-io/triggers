@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/go-logr/logr v1.2.4
 	github.com/google/go-github/v53 v53.2.0
-	github.com/onsi/ginkgo/v2 v2.12.1
+	github.com/onsi/ginkgo/v2 v2.13.0
 	github.com/onsi/gomega v1.27.10
 	github.com/shipwright-io/build v0.11.1-0.20230807070125-1156efa24b0a
 	github.com/tektoncd/pipeline v0.44.0
