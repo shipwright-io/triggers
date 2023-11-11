@@ -85,7 +85,9 @@ func TektonPipelineRunRunning(name string) tknv1beta1.PipelineRun {
 
 func TektonPipelineRunTimedOut(name string) tknv1beta1.PipelineRun {
 	pipelineRun := TektonPipelineRun(name)
-	pipelineRun.Spec.Timeout = &metav1.Duration{Duration: time.Second}
+	pipelineRun.Spec.Timeouts = &tknv1beta1.TimeoutFields{
+		Pipeline: &metav1.Duration{Duration: time.Second},
+	}
 	pipelineRun.Status.PipelineRunStatusFields = tknv1beta1.PipelineRunStatusFields{
 		StartTime: &metav1.Time{
 			Time: time.Date(1982, time.January, 1, 0, 0, 0, 0, time.Local),
