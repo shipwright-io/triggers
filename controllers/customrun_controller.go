@@ -8,11 +8,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
+	buildapi "github.com/shipwright-io/build/pkg/apis/build/v1beta1"
 	"github.com/shipwright-io/triggers/pkg/filter"
 
 	"github.com/go-logr/logr"
-	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonapibeta "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,9 +46,9 @@ type CustomRunReconciler struct {
 // BuildRun name is randomly generated using the Run's name as base.
 func (r *CustomRunReconciler) generateBuildRun(
 	ctx context.Context,
-	customRun *tknv1beta1.CustomRun,
-) (*v1alpha1.BuildRun, error) {
-	br := v1alpha1.BuildRun{
+	customRun *tektonapibeta.CustomRun,
+) (*buildapi.BuildRun, error) {
+	br := buildapi.BuildRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: customRun.GetNamespace(),
 			Name:      names.SimpleNameGenerator.GenerateName(fmt.Sprintf("%s-", customRun.Name)),
@@ -56,10 +56,9 @@ func (r *CustomRunReconciler) generateBuildRun(
 				filter.OwnedByTektonCustomRun: customRun.Name,
 			},
 		},
-		Spec: v1alpha1.BuildRunSpec{
-			BuildRef: &v1alpha1.BuildRef{
-				APIVersion: &customRun.Spec.CustomRef.APIVersion,
-				Name:       customRun.Spec.CustomRef.Name,
+		Spec: buildapi.BuildRunSpec{
+			Build: buildapi.ReferencedBuild{
+				Name: &customRun.Spec.CustomRef.Name,
 			},
 			ParamValues: filter.TektonCustomRunParamsToShipwrightParamValues(customRun),
 			Timeout:     customRun.Spec.Timeout,
@@ -75,8 +74,8 @@ func (r *CustomRunReconciler) generateBuildRun(
 // reflectBuildRunStatusOnTektonRun reflects the BuildRun status on the Run instance.
 func (r *CustomRunReconciler) reflectBuildRunStatusOnTektonCustomRun(
 	logger logr.Logger,
-	customRun *tknv1beta1.CustomRun,
-	br *v1alpha1.BuildRun,
+	customRun *tektonapibeta.CustomRun,
+	br *buildapi.BuildRun,
 ) {
 	if br.Status.CompletionTime != nil {
 		customRun.Status.CompletionTime = br.Status.CompletionTime
@@ -127,7 +126,7 @@ func (r *CustomRunReconciler) Reconcile(
 ) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
-	var customRun tknv1beta1.CustomRun
+	var customRun tektonapibeta.CustomRun
 	err := r.Get(ctx, req.NamespacedName, &customRun)
 	if err != nil {
 		if !errors.IsNotFound(err) {
@@ -154,7 +153,7 @@ func (r *CustomRunReconciler) Reconcile(
 		return RequeueOnError(err)
 	}
 
-	var br = &v1alpha1.BuildRun{}
+	var br = &buildapi.BuildRun{}
 	// when the status extra-fields is empty, it means the BuildRun instance is not created yet, thus
 	// the first step is issuing the instance and later on watching over its status updates
 	if extraFields.IsEmpty() {
@@ -204,7 +203,7 @@ func (r *CustomRunReconciler) Reconcile(
 			logger.V(0).Info("Tekton CustomRun instance is cancelled, cancelling the BuildRun too")
 
 			originalBr := br.DeepCopy()
-			br.Spec.State = v1alpha1.BuildRunRequestedStatePtr(v1alpha1.BuildRunStateCancel)
+			br.Spec.State = buildapi.BuildRunRequestedStatePtr(buildapi.BuildRunStateCancel)
 			if err = r.Client.Patch(ctx, br, client.MergeFrom(originalBr)); err != nil {
 				logger.V(0).Error(err, "trying to patch BuildRun with cancellation state")
 				return RequeueOnError(err)
@@ -232,9 +231,9 @@ func (r *CustomRunReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		// watches Tekton Run instances, that's the principal resource for this controller
-		For(&tknv1beta1.CustomRun{}).
+		For(&tektonapibeta.CustomRun{}).
 		// it also watches over BuildRun instances that are owned by this controller
-		Owns(&v1alpha1.BuildRun{}).
+		Owns(&buildapi.BuildRun{}).
 		// filtering out objects that aren't ready for reconciliation
 		WithEventFilter(predicate.NewPredicateFuncs(filter.CustomRunEventFilterPredicate)).
 		// making sure the controller reconciles one instance at the time in order to not create a

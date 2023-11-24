@@ -12,19 +12,19 @@ import (
 	"github.com/shipwright-io/triggers/pkg/constants"
 	"github.com/shipwright-io/triggers/test/stubs"
 
-	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 )
 
 func Test_pipelineRunReferencesShipwright(t *testing.T) {
 	tests := []struct {
 		name        string
-		pipelineRun *tknv1beta1.PipelineRun
+		pipelineRun *tektonapi.PipelineRun
 		want        bool
 	}{{
 		name: "pipelinerun has status.pipelinespec nil",
-		pipelineRun: &tknv1beta1.PipelineRun{
-			Status: tknv1beta1.PipelineRunStatus{
-				PipelineRunStatusFields: tknv1beta1.PipelineRunStatusFields{
+		pipelineRun: &tektonapi.PipelineRun{
+			Status: tektonapi.PipelineRunStatus{
+				PipelineRunStatusFields: tektonapi.PipelineRunStatusFields{
 					PipelineSpec: nil,
 				},
 			},
@@ -32,11 +32,11 @@ func Test_pipelineRunReferencesShipwright(t *testing.T) {
 		want: false,
 	}, {
 		name: "pipelinerun does not references shipwright build",
-		pipelineRun: &tknv1beta1.PipelineRun{
-			Status: tknv1beta1.PipelineRunStatus{
-				PipelineRunStatusFields: tknv1beta1.PipelineRunStatusFields{
-					PipelineSpec: &tknv1beta1.PipelineSpec{
-						Tasks: []tknv1beta1.PipelineTask{{}},
+		pipelineRun: &tektonapi.PipelineRun{
+			Status: tektonapi.PipelineRunStatus{
+				PipelineRunStatusFields: tektonapi.PipelineRunStatusFields{
+					PipelineSpec: &tektonapi.PipelineSpec{
+						Tasks: []tektonapi.PipelineTask{{}},
 					},
 				},
 			},
@@ -44,13 +44,13 @@ func Test_pipelineRunReferencesShipwright(t *testing.T) {
 		want: false,
 	}, {
 		name: "pipelinerun references shipwright build",
-		pipelineRun: &tknv1beta1.PipelineRun{
-			Status: tknv1beta1.PipelineRunStatus{
-				PipelineRunStatusFields: tknv1beta1.PipelineRunStatusFields{
-					PipelineSpec: &tknv1beta1.PipelineSpec{
-						Tasks: []tknv1beta1.PipelineTask{{
+		pipelineRun: &tektonapi.PipelineRun{
+			Status: tektonapi.PipelineRunStatus{
+				PipelineRunStatusFields: tektonapi.PipelineRunStatusFields{
+					PipelineSpec: &tektonapi.PipelineSpec{
+						Tasks: []tektonapi.PipelineTask{{
 							Name: "task",
-							TaskRef: &tknv1beta1.TaskRef{
+							TaskRef: &tektonapi.TaskRef{
 								Name:       "shipwright-build",
 								APIVersion: constants.ShipwrightAPIVersion,
 								Kind:       "Build",
@@ -74,7 +74,7 @@ func Test_pipelineRunReferencesShipwright(t *testing.T) {
 func TestParsePipelineRunStatus(t *testing.T) {
 	tests := []struct {
 		name        string
-		pipelineRun tknv1beta1.PipelineRun
+		pipelineRun tektonapi.PipelineRun
 		want        string
 		wantErr     bool
 	}{{

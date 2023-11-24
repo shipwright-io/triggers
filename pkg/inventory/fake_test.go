@@ -8,7 +8,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
+	buildapi "github.com/shipwright-io/build/pkg/apis/build/v1beta1"
 	"github.com/shipwright-io/triggers/test/stubs"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -18,7 +18,7 @@ import (
 type FakeInventory struct {
 	m sync.Mutex
 
-	cache map[types.NamespacedName]*v1alpha1.Build
+	cache map[types.NamespacedName]*buildapi.Build
 }
 
 var _ Interface = &FakeInventory{}
@@ -34,7 +34,7 @@ func (i *FakeInventory) Contains(name string) bool {
 }
 
 // Add adds a Build to the cache.
-func (i *FakeInventory) Add(b *v1alpha1.Build) {
+func (i *FakeInventory) Add(b *buildapi.Build) {
 	i.m.Lock()
 	defer i.m.Unlock()
 
@@ -61,10 +61,9 @@ func (i *FakeInventory) search() []SearchResult {
 	for _, b := range i.cache {
 		secretName := types.NamespacedName{}
 		if b.Spec.Trigger != nil &&
-			b.Spec.Trigger.SecretRef != nil &&
-			b.Spec.Trigger.SecretRef.Name != "" {
+			b.Spec.Trigger.TriggerSecret != nil {
 			secretName.Namespace = b.GetNamespace()
-			secretName.Namespace = b.Spec.Trigger.SecretRef.Name
+			secretName.Name = *b.Spec.Trigger.TriggerSecret
 		}
 		searchResults = append(searchResults, SearchResult{
 			BuildName:  types.NamespacedName{Namespace: b.GetNamespace(), Name: b.GetName()},
@@ -76,8 +75,8 @@ func (i *FakeInventory) search() []SearchResult {
 
 // SearchForObjectRef returns all Builds in cache.
 func (i *FakeInventory) SearchForObjectRef(
-	v1alpha1.TriggerType,
-	*v1alpha1.WhenObjectRef,
+	buildapi.TriggerType,
+	*buildapi.WhenObjectRef,
 ) []SearchResult {
 	i.m.Lock()
 	defer i.m.Unlock()
@@ -86,7 +85,7 @@ func (i *FakeInventory) SearchForObjectRef(
 }
 
 // SearchForGit returns all Builds in cache.
-func (i *FakeInventory) SearchForGit(v1alpha1.TriggerType, string, string) []SearchResult {
+func (i *FakeInventory) SearchForGit(buildapi.TriggerType, string, string) []SearchResult {
 	i.m.Lock()
 	defer i.m.Unlock()
 
@@ -96,6 +95,6 @@ func (i *FakeInventory) SearchForGit(v1alpha1.TriggerType, string, string) []Sea
 // NewFakeInventory instante a fake inventory for testing.
 func NewFakeInventory() *FakeInventory {
 	return &FakeInventory{
-		cache: map[types.NamespacedName]*v1alpha1.Build{},
+		cache: map[types.NamespacedName]*buildapi.Build{},
 	}
 }

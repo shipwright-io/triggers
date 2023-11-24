@@ -10,41 +10,42 @@ import (
 
 	"github.com/shipwright-io/triggers/pkg/constants"
 
-	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
+	tektonapibeta "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var TektonPipelineRunStatusCustomTaskShipwright = &tknv1beta1.PipelineSpec{
-	Tasks: []tknv1beta1.PipelineTask{TektonPipelineTaskRefToShipwright},
+var TektonPipelineRunStatusCustomTaskShipwright = &tektonapi.PipelineSpec{
+	Tasks: []tektonapi.PipelineTask{TektonPipelineTaskRefToShipwright},
 }
 
-var TektonPipelineTaskRefToShipwright = tknv1beta1.PipelineTask{
+var TektonPipelineTaskRefToShipwright = tektonapi.PipelineTask{
 	Name: "shipwright",
-	TaskRef: &tknv1beta1.TaskRef{
+	TaskRef: &tektonapi.TaskRef{
 		APIVersion: constants.ShipwrightAPIVersion,
 		Name:       "name",
 	},
 }
 
-var TektonTaskRefToTekton = &tknv1beta1.TaskRef{
+var TektonTaskRefToTekton = &tektonapibeta.TaskRef{
 	Name: "task-ex",
 }
 
-func TektonTaskRefToShipwright(name string) *tknv1beta1.TaskRef {
-	return &tknv1beta1.TaskRef{
+func TektonTaskRefToShipwright(name string) *tektonapibeta.TaskRef {
+	return &tektonapibeta.TaskRef{
 		APIVersion: constants.ShipwrightAPIVersion,
 		Kind:       "Build",
 		Name:       name,
 	}
 }
 
-func TektonCustomRun(name string, ref *tknv1beta1.TaskRef) *tknv1beta1.CustomRun {
-	return &tknv1beta1.CustomRun{
+func TektonCustomRun(name string, ref *tektonapibeta.TaskRef) *tektonapibeta.CustomRun {
+	return &tektonapibeta.CustomRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: Namespace,
 			Name:      name,
 		},
-		Spec: tknv1beta1.CustomRunSpec{
+		Spec: tektonapibeta.CustomRunSpec{
 			CustomRef: ref,
 		},
 	}
@@ -52,80 +53,80 @@ func TektonCustomRun(name string, ref *tknv1beta1.TaskRef) *tknv1beta1.CustomRun
 
 // TektonCustomRunStarted returns a started (now) CustomRun instance using the name and TaskRef
 // informed.
-func TektonCustomRunStarted(name string, ref *tknv1beta1.TaskRef) *tknv1beta1.CustomRun {
+func TektonCustomRunStarted(name string, ref *tektonapibeta.TaskRef) *tektonapibeta.CustomRun {
 	customRun := TektonCustomRun(name, ref)
-	customRun.Status = tknv1beta1.CustomRunStatus{
-		CustomRunStatusFields: tknv1beta1.CustomRunStatusFields{
+	customRun.Status = tektonapibeta.CustomRunStatus{
+		CustomRunStatusFields: tektonapibeta.CustomRunStatusFields{
 			StartTime: &metav1.Time{Time: time.Now()},
 		},
 	}
 	return customRun
 }
 
-func TektonPipelineRunCanceled(name string) tknv1beta1.PipelineRun {
+func TektonPipelineRunCanceled(name string) tektonapi.PipelineRun {
 	pipelineRun := TektonPipelineRun(name)
-	pipelineRun.Spec.Status = tknv1beta1.PipelineRunSpecStatus(
-		tknv1beta1.PipelineRunReasonCancelled,
+	pipelineRun.Spec.Status = tektonapi.PipelineRunSpecStatus(
+		tektonapi.PipelineRunReasonCancelled,
 	)
-	pipelineRun.Status.PipelineRunStatusFields = tknv1beta1.PipelineRunStatusFields{
-		PipelineSpec: &tknv1beta1.PipelineSpec{Description: "testing"},
+	pipelineRun.Status.PipelineRunStatusFields = tektonapi.PipelineRunStatusFields{
+		PipelineSpec: &tektonapi.PipelineSpec{Description: "testing"},
 	}
 	return pipelineRun
 }
 
-func TektonPipelineRunRunning(name string) tknv1beta1.PipelineRun {
+func TektonPipelineRunRunning(name string) tektonapi.PipelineRun {
 	pipelineRun := TektonPipelineRun(name)
 	pipelineRun.Status.StartTime = &metav1.Time{Time: time.Now()}
-	pipelineRun.Status.PipelineRunStatusFields = tknv1beta1.PipelineRunStatusFields{
+	pipelineRun.Status.PipelineRunStatusFields = tektonapi.PipelineRunStatusFields{
 		StartTime:    &metav1.Time{Time: time.Now()},
-		PipelineSpec: &tknv1beta1.PipelineSpec{Description: "testing"},
+		PipelineSpec: &tektonapi.PipelineSpec{Description: "testing"},
 	}
 	return pipelineRun
 }
 
-func TektonPipelineRunTimedOut(name string) tknv1beta1.PipelineRun {
+func TektonPipelineRunTimedOut(name string) tektonapi.PipelineRun {
 	pipelineRun := TektonPipelineRun(name)
-	pipelineRun.Spec.Timeouts = &tknv1beta1.TimeoutFields{
+	pipelineRun.Spec.Timeouts = &tektonapi.TimeoutFields{
 		Pipeline: &metav1.Duration{Duration: time.Second},
 	}
-	pipelineRun.Status.PipelineRunStatusFields = tknv1beta1.PipelineRunStatusFields{
+	pipelineRun.Status.PipelineRunStatusFields = tektonapi.PipelineRunStatusFields{
 		StartTime: &metav1.Time{
 			Time: time.Date(1982, time.January, 1, 0, 0, 0, 0, time.Local),
 		},
-		PipelineSpec: &tknv1beta1.PipelineSpec{Description: "testing"},
+		PipelineSpec: &tektonapi.PipelineSpec{Description: "testing"},
 	}
 	return pipelineRun
 }
 
-func TektonPipelineRunSucceeded(name string) tknv1beta1.PipelineRun {
+func TektonPipelineRunSucceeded(name string) tektonapi.PipelineRun {
 	pipelineRun := TektonPipelineRun(name)
 	pipelineRun.Status.MarkSucceeded("Succeeded", fmt.Sprintf("PipelineRun %q has succeeded", name))
-	pipelineRun.Status.PipelineRunStatusFields = tknv1beta1.PipelineRunStatusFields{
-		PipelineSpec: &tknv1beta1.PipelineSpec{Description: "testing"},
+	pipelineRun.Status.PipelineRunStatusFields = tektonapi.PipelineRunStatusFields{
+		PipelineSpec: &tektonapi.PipelineSpec{Description: "testing"},
 	}
 	return pipelineRun
 }
 
-func TektonPipelineRunFailed(name string) tknv1beta1.PipelineRun {
+func TektonPipelineRunFailed(name string) tektonapi.PipelineRun {
 	pipelineRun := TektonPipelineRun(name)
 	pipelineRun.Status.MarkFailed("Failed", fmt.Sprintf("PipelineRun %q has failed", name))
-	pipelineRun.Status.PipelineRunStatusFields = tknv1beta1.PipelineRunStatusFields{
-		PipelineSpec: &tknv1beta1.PipelineSpec{Description: "testing"},
+	pipelineRun.Status.PipelineRunStatusFields = tektonapi.PipelineRunStatusFields{
+		PipelineSpec: &tektonapi.PipelineSpec{Description: "testing"},
 	}
 	return pipelineRun
 }
 
-func TektonPipelineRun(name string) tknv1beta1.PipelineRun {
-	return tknv1beta1.PipelineRun{
+func TektonPipelineRun(name string) tektonapi.PipelineRun {
+	return tektonapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: Namespace,
 			Name:      name,
 		},
-		Spec: tknv1beta1.PipelineRunSpec{
-			PipelineRef: &tknv1beta1.PipelineRef{
+		Spec: tektonapi.PipelineRunSpec{
+			PipelineRef: &tektonapi.PipelineRef{
 				Name: name,
 			},
 		},
-		Status: tknv1beta1.PipelineRunStatus{},
+		Status: tektonapi.PipelineRunStatus{},
 	}
 }

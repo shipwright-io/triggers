@@ -9,9 +9,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
+	buildapi "github.com/shipwright-io/build/pkg/apis/build/v1beta1"
 	"github.com/shipwright-io/triggers/test/stubs"
-	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 )
 
 func TestPipelineRunExtractTriggeredBuildsSlice(t *testing.T) {
@@ -25,7 +25,7 @@ func TestPipelineRunExtractTriggeredBuildsSlice(t *testing.T) {
 	pipelineRunWithTriggeredBuildsAnnotation := stubs.TektonPipelineRun("pipeline")
 	triggeredBuilds := []TriggeredBuild{{
 		BuildName: "build",
-		ObjectRef: &v1alpha1.WhenObjectRef{},
+		ObjectRef: &buildapi.WhenObjectRef{},
 	}}
 	triggeredBuildsAnnotationBytes, err := json.Marshal(triggeredBuilds)
 	if err != nil {
@@ -37,7 +37,7 @@ func TestPipelineRunExtractTriggeredBuildsSlice(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		pipelineRun tknv1beta1.PipelineRun
+		pipelineRun tektonapi.PipelineRun
 		want        []TriggeredBuild
 		wantErr     bool
 	}{{
@@ -77,7 +77,7 @@ func TestTriggereBuildsContainsObjectRef(t *testing.T) {
 		name            string
 		triggeredBuilds []TriggeredBuild
 		buildNames      []string
-		objectRef       *v1alpha1.WhenObjectRef
+		objectRef       *buildapi.WhenObjectRef
 		want            bool
 	}{{
 		name: "triggered builds contains objectRef",
@@ -133,31 +133,31 @@ func TestAppendIntoTriggeredBuildSliceAsAnnotation(t *testing.T) {
 		name            string
 		triggeredBuilds []TriggeredBuild
 		buildNames      []string
-		objectRef       *v1alpha1.WhenObjectRef
+		objectRef       *buildapi.WhenObjectRef
 		want            string
 		wantErr         bool
 	}{{
 		name:            "empty inputs",
 		triggeredBuilds: []TriggeredBuild{},
 		buildNames:      []string{},
-		objectRef:       &v1alpha1.WhenObjectRef{},
+		objectRef:       &buildapi.WhenObjectRef{},
 		want:            "[]",
 		wantErr:         false,
 	}, {
 		name:            "empty triggered-builds with a single build",
 		triggeredBuilds: []TriggeredBuild{},
 		buildNames:      []string{"build"},
-		objectRef:       &v1alpha1.WhenObjectRef{},
+		objectRef:       &buildapi.WhenObjectRef{},
 		want:            "[{\"buildName\":\"build\",\"objectRef\":{}}]",
 		wantErr:         false,
 	}, {
 		name: "single triggered-build with single build",
 		triggeredBuilds: []TriggeredBuild{{
 			BuildName: "previous-build",
-			ObjectRef: &v1alpha1.WhenObjectRef{},
+			ObjectRef: &buildapi.WhenObjectRef{},
 		}},
 		buildNames: []string{"build"},
-		objectRef:  &v1alpha1.WhenObjectRef{},
+		objectRef:  &buildapi.WhenObjectRef{},
 		want: "[{\"buildName\":\"previous-build\",\"objectRef\":{}}," +
 			"{\"buildName\":\"build\",\"objectRef\":{}}]",
 		wantErr: false,

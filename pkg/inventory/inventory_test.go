@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/onsi/gomega"
-	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
+	buildapi "github.com/shipwright-io/build/pkg/apis/build/v1beta1"
 	"github.com/shipwright-io/triggers/test/stubs"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -47,30 +47,30 @@ func TestInventorySearchForgit(t *testing.T) {
 	i.Add(buildWithTrigger)
 
 	t.Run("should not find any results", func(_ *testing.T) {
-		found := i.SearchForGit(v1alpha1.GitHubWebHookTrigger, "", "")
+		found := i.SearchForGit(buildapi.GitHubWebHookTrigger, "", "")
 		g.Expect(len(found)).To(gomega.Equal(0))
 
-		found = i.SearchForGit(v1alpha1.GitHubWebHookTrigger, stubs.RepoURL, "")
+		found = i.SearchForGit(buildapi.GitHubWebHookTrigger, stubs.RepoURL, "")
 		g.Expect(len(found)).To(gomega.Equal(0))
 	})
 
 	t.Run("should find the build object", func(_ *testing.T) {
-		found := i.SearchForGit(v1alpha1.GitHubWebHookTrigger, stubs.RepoURL, stubs.Branch)
+		found := i.SearchForGit(buildapi.GitHubWebHookTrigger, stubs.RepoURL, stubs.Branch)
 		g.Expect(len(found)).To(gomega.Equal(1))
 	})
 }
 
 func TestInventory_SearchForObjectRef(t *testing.T) {
-	buildWithObjectRefName := v1alpha1.Build{
+	buildWithObjectRefName := buildapi.Build{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: stubs.Namespace,
 			Name:      "buildname",
 		},
-		Spec: v1alpha1.BuildSpec{
-			Trigger: &v1alpha1.Trigger{
-				When: []v1alpha1.TriggerWhen{{
-					Type: v1alpha1.PipelineTrigger,
-					ObjectRef: &v1alpha1.WhenObjectRef{
+		Spec: buildapi.BuildSpec{
+			Trigger: &buildapi.Trigger{
+				When: []buildapi.TriggerWhen{{
+					Type: buildapi.PipelineTrigger,
+					ObjectRef: &buildapi.WhenObjectRef{
 						Name:   "name",
 						Status: []string{"Successful"},
 					},
@@ -78,17 +78,17 @@ func TestInventory_SearchForObjectRef(t *testing.T) {
 			},
 		},
 	}
-	buildWithObjectRefSelector := v1alpha1.Build{
+	buildWithObjectRefSelector := buildapi.Build{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:    map[string]string{"k": "v"},
 			Namespace: stubs.Namespace,
 			Name:      "buildname",
 		},
-		Spec: v1alpha1.BuildSpec{
-			Trigger: &v1alpha1.Trigger{
-				When: []v1alpha1.TriggerWhen{{
-					Type: v1alpha1.PipelineTrigger,
-					ObjectRef: &v1alpha1.WhenObjectRef{
+		Spec: buildapi.BuildSpec{
+			Trigger: &buildapi.Trigger{
+				When: []buildapi.TriggerWhen{{
+					Type: buildapi.PipelineTrigger,
+					ObjectRef: &buildapi.WhenObjectRef{
 						Status:   []string{"Successful"},
 						Selector: map[string]string{"k": "v"},
 					},
@@ -99,15 +99,15 @@ func TestInventory_SearchForObjectRef(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		builds    []v1alpha1.Build
-		whenType  v1alpha1.TriggerType
-		objectRef v1alpha1.WhenObjectRef
+		builds    []buildapi.Build
+		whenType  buildapi.TriggerType
+		objectRef buildapi.WhenObjectRef
 		want      []SearchResult
 	}{{
 		name:     "find build by name",
-		builds:   []v1alpha1.Build{buildWithObjectRefName},
-		whenType: v1alpha1.PipelineTrigger,
-		objectRef: v1alpha1.WhenObjectRef{
+		builds:   []buildapi.Build{buildWithObjectRefName},
+		whenType: buildapi.PipelineTrigger,
+		objectRef: buildapi.WhenObjectRef{
 			Name:   "name",
 			Status: []string{"Successful"},
 		},
@@ -116,9 +116,9 @@ func TestInventory_SearchForObjectRef(t *testing.T) {
 		}},
 	}, {
 		name:     "find build by label selector",
-		builds:   []v1alpha1.Build{buildWithObjectRefSelector},
-		whenType: v1alpha1.PipelineTrigger,
-		objectRef: v1alpha1.WhenObjectRef{
+		builds:   []buildapi.Build{buildWithObjectRefSelector},
+		whenType: buildapi.PipelineTrigger,
+		objectRef: buildapi.WhenObjectRef{
 			Status:   []string{"Successful"},
 			Selector: map[string]string{"k": "v"},
 		},
@@ -127,18 +127,18 @@ func TestInventory_SearchForObjectRef(t *testing.T) {
 		}},
 	}, {
 		name:     "does not find builds, due to wrong selector",
-		builds:   []v1alpha1.Build{buildWithObjectRefSelector},
-		whenType: v1alpha1.PipelineTrigger,
-		objectRef: v1alpha1.WhenObjectRef{
+		builds:   []buildapi.Build{buildWithObjectRefSelector},
+		whenType: buildapi.PipelineTrigger,
+		objectRef: buildapi.WhenObjectRef{
 			Status:   []string{"Successful"},
 			Selector: map[string]string{"wrong": "label"},
 		},
 		want: []SearchResult{},
 	}, {
 		name:     "does not find builds, due to wrong name",
-		builds:   []v1alpha1.Build{buildWithObjectRefSelector},
-		whenType: v1alpha1.PipelineTrigger,
-		objectRef: v1alpha1.WhenObjectRef{
+		builds:   []buildapi.Build{buildWithObjectRefSelector},
+		whenType: buildapi.PipelineTrigger,
+		objectRef: buildapi.WhenObjectRef{
 			Name:   "wrong",
 			Status: []string{"Successful"},
 		},

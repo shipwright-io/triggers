@@ -7,19 +7,24 @@ package constants
 import (
 	"fmt"
 
-	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
+	buildapi "github.com/shipwright-io/build/pkg/apis/build/v1beta1"
 
-	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
+	tektonapibeta "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
 
 var (
+	TektonAPIv1 = fmt.Sprintf("%s/%s",
+		tektonapi.SchemeGroupVersion.Group,
+		tektonapi.SchemeGroupVersion.Version,
+	)
 	TektonAPIv1beta1 = fmt.Sprintf("%s/%s",
-		tknv1beta1.SchemeGroupVersion.Group,
-		tknv1beta1.SchemeGroupVersion.Version,
+		tektonapibeta.SchemeGroupVersion.Group,
+		tektonapibeta.SchemeGroupVersion.Version,
 	)
 	ShipwrightAPIVersion = fmt.Sprintf(
 		"%s/%s",
-		v1alpha1.SchemeGroupVersion.Group,
-		v1alpha1.SchemeGroupVersion.Version,
+		buildapi.SchemeGroupVersion.Group,
+		buildapi.SchemeGroupVersion.Version,
 	)
 )

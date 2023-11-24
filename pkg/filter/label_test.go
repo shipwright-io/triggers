@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/shipwright-io/triggers/test/stubs"
-	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 )
 
 func TestAppendIssuedBuildRunsLabel(t *testing.T) {
@@ -19,7 +19,7 @@ func TestAppendIssuedBuildRunsLabel(t *testing.T) {
 
 	tests := []struct {
 		name            string
-		pipelineRun     tknv1beta1.PipelineRun
+		pipelineRun     tektonapi.PipelineRun
 		buildRunsIssued []string
 		want            string
 	}{{

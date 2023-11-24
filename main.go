@@ -8,11 +8,12 @@ import (
 	"flag"
 	"os"
 
-	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
+	buildapi "github.com/shipwright-io/build/pkg/apis/build/v1beta1"
 	"github.com/shipwright-io/triggers/controllers"
 	"github.com/shipwright-io/triggers/pkg/inventory"
 
-	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
+	tektonapibeta "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -33,8 +34,9 @@ var (
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(v1alpha1.AddToScheme(scheme))
-	utilruntime.Must(tknv1beta1.AddToScheme(scheme))
+	utilruntime.Must(buildapi.AddToScheme(scheme))
+	utilruntime.Must(tektonapi.AddToScheme(scheme))
+	utilruntime.Must(tektonapibeta.AddToScheme(scheme))
 }
 
 func main() {

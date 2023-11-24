@@ -8,12 +8,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
+	buildapi "github.com/shipwright-io/build/pkg/apis/build/v1beta1"
 	"github.com/shipwright-io/triggers/pkg/constants"
 	"github.com/shipwright-io/triggers/pkg/filter"
 	"github.com/shipwright-io/triggers/pkg/inventory"
 
-	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -42,10 +42,10 @@ type PipelineRunReconciler struct {
 // establish ownership. Only returns the created object name and error.
 func (r *PipelineRunReconciler) createBuildRun(
 	ctx context.Context,
-	pipelineRun *tknv1beta1.PipelineRun,
+	pipelineRun *tektonapi.PipelineRun,
 	buildName string,
 ) (string, error) {
-	br := v1alpha1.BuildRun{
+	br := buildapi.BuildRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:    pipelineRun.GetNamespace(),
 			GenerateName: fmt.Sprintf("%s-", buildName),
@@ -53,15 +53,15 @@ func (r *PipelineRunReconciler) createBuildRun(
 				filter.OwnedByTektonPipelineRun: pipelineRun.GetName(),
 			},
 			OwnerReferences: []metav1.OwnerReference{{
-				APIVersion: constants.TektonAPIv1beta1,
+				APIVersion: constants.TektonAPIv1,
 				Kind:       "PipelineRun",
 				Name:       pipelineRun.GetName(),
 				UID:        pipelineRun.GetUID(),
 			}},
 		},
-		Spec: v1alpha1.BuildRunSpec{
-			BuildRef: &v1alpha1.BuildRef{
-				Name: buildName,
+		Spec: buildapi.BuildRunSpec{
+			Build: buildapi.ReferencedBuild{
+				Name: &buildName,
 			},
 		},
 	}
@@ -75,7 +75,7 @@ func (r *PipelineRunReconciler) createBuildRun(
 // the PipelineRun annotations to documented the created BuildRuns.
 func (r *PipelineRunReconciler) issueBuildRunsForPipelineRun(
 	ctx context.Context,
-	pipelineRun *tknv1beta1.PipelineRun,
+	pipelineRun *tektonapi.PipelineRun,
 	buildNames []string,
 ) ([]string, error) {
 	var created []string
@@ -99,7 +99,7 @@ func (r *PipelineRunReconciler) Reconcile(
 ) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
-	var pipelineRun tknv1beta1.PipelineRun
+	var pipelineRun tektonapi.PipelineRun
 	if err := r.Get(ctx, req.NamespacedName, &pipelineRun); err != nil {
 		if !errors.IsNotFound(err) {
 			logger.Error(err, "Unable to fetch PipelineRun")
@@ -123,7 +123,7 @@ func (r *PipelineRunReconciler) Reconcile(
 	)
 
 	// search for Builds with Pipeline triggers matching current ObjectRef criteria
-	buildsToBeIssued := r.buildInventory.SearchForObjectRef(v1alpha1.PipelineTrigger, objectRef)
+	buildsToBeIssued := r.buildInventory.SearchForObjectRef(buildapi.PipelineTrigger, objectRef)
 	if len(buildsToBeIssued) == 0 {
 		return Done()
 	}
@@ -197,7 +197,7 @@ func (r *PipelineRunReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&tknv1beta1.PipelineRun{}).
+		For(&tektonapi.PipelineRun{}).
 		WithEventFilter(predicate.NewPredicateFuncs(filter.PipelineRunEventFilterPredicate)).
 		WithOptions(controller.Options{MaxConcurrentReconciles: 1}).
 		Complete(r)

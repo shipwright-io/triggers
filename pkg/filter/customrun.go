@@ -5,29 +5,29 @@
 package filter
 
 import (
-	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
+	buildapi "github.com/shipwright-io/build/pkg/apis/build/v1beta1"
 	"github.com/shipwright-io/triggers/pkg/constants"
 
-	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonapibeta "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // TektonCustomRunParamsToShipwrightParamValues transforms the informed Tekton Run params into Shipwright
 // ParamValues slice.
-func TektonCustomRunParamsToShipwrightParamValues(customRun *tknv1beta1.CustomRun) []v1alpha1.ParamValue {
-	paramValues := []v1alpha1.ParamValue{}
+func TektonCustomRunParamsToShipwrightParamValues(customRun *tektonapibeta.CustomRun) []buildapi.ParamValue {
+	paramValues := []buildapi.ParamValue{}
 	for i, p := range customRun.Spec.Params {
-		paramValue := v1alpha1.ParamValue{Name: p.Name}
-		if p.Value.Type == tknv1beta1.ParamTypeArray {
-			paramValue.Values = []v1alpha1.SingleValue{}
+		paramValue := buildapi.ParamValue{Name: p.Name}
+		if p.Value.Type == tektonapibeta.ParamTypeArray {
+			paramValue.Values = []buildapi.SingleValue{}
 			for _, v := range p.Value.ArrayVal {
 				v := v
-				paramValue.Values = append(paramValue.Values, v1alpha1.SingleValue{
+				paramValue.Values = append(paramValue.Values, buildapi.SingleValue{
 					Value: &v,
 				})
 			}
 		} else {
-			paramValue.SingleValue = &v1alpha1.SingleValue{
+			paramValue.SingleValue = &buildapi.SingleValue{
 				Value: &customRun.Spec.Params[i].Value.StringVal,
 			}
 		}
@@ -37,7 +37,7 @@ func TektonCustomRunParamsToShipwrightParamValues(customRun *tknv1beta1.CustomRu
 }
 
 // customRunReferencesShipwright inspect the CustomRun instance looking for a TaskRef pointing to Shipwright.
-func customRunReferencesShipwright(customRun *tknv1beta1.CustomRun) bool {
+func customRunReferencesShipwright(customRun *tektonapibeta.CustomRun) bool {
 	if customRun.Spec.CustomRef == nil {
 		return false
 	}
@@ -51,7 +51,7 @@ func customRunReferencesShipwright(customRun *tknv1beta1.CustomRun) bool {
 func CustomRunEventFilterPredicate(obj client.Object) bool {
 	logger := loggerForClientObj(obj, "controller.run-filter")
 
-	br, ok := obj.(*v1alpha1.BuildRun)
+	br, ok := obj.(*buildapi.BuildRun)
 	if ok {
 		logger.V(0).Info("Inspecting BuildRun instance for Tekton's CustomRun ownership")
 		return ExtractBuildRunCustomRunOwner(br) != nil
@@ -59,7 +59,7 @@ func CustomRunEventFilterPredicate(obj client.Object) bool {
 
 	// the custom-tasks controller watches over Tekton's CustomRun and BuildRun objects, thus here we
 	// ignore casting errors and skip the object
-	customRun, ok := obj.(*tknv1beta1.CustomRun)
+	customRun, ok := obj.(*tektonapibeta.CustomRun)
 	if !ok {
 		logger.V(0).Error(nil, "Object is not a Tekton CustomRun!")
 		return false

@@ -8,10 +8,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
+	buildapi "github.com/shipwright-io/build/pkg/apis/build/v1beta1"
 	"github.com/shipwright-io/triggers/test/stubs"
 
-	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonapibeta "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -20,45 +20,45 @@ func TestTektonCustomRunParamsToShipwrightParamValues(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		customRun *tknv1beta1.CustomRun
-		want      []v1alpha1.ParamValue
+		customRun *tektonapibeta.CustomRun
+		want      []buildapi.ParamValue
 	}{{
 		name: "run does not contain params",
-		customRun: &tknv1beta1.CustomRun{
-			Spec: tknv1beta1.CustomRunSpec{
-				Params: []tknv1beta1.Param{},
+		customRun: &tektonapibeta.CustomRun{
+			Spec: tektonapibeta.CustomRunSpec{
+				Params: []tektonapibeta.Param{},
 			},
 		},
-		want: []v1alpha1.ParamValue{},
+		want: []buildapi.ParamValue{},
 	}, {
 		name: "run contains an string param",
-		customRun: &tknv1beta1.CustomRun{
-			Spec: tknv1beta1.CustomRunSpec{
-				Params: []tknv1beta1.Param{{
+		customRun: &tektonapibeta.CustomRun{
+			Spec: tektonapibeta.CustomRunSpec{
+				Params: []tektonapibeta.Param{{
 					Name:  "string",
-					Value: *tknv1beta1.NewArrayOrString(value),
+					Value: *tektonapibeta.NewArrayOrString(value),
 				}},
 			},
 		},
-		want: []v1alpha1.ParamValue{{
+		want: []buildapi.ParamValue{{
 			Name: "string",
-			SingleValue: &v1alpha1.SingleValue{
+			SingleValue: &buildapi.SingleValue{
 				Value: &value,
 			},
 		}},
 	}, {
 		name: "run contains an string-array param",
-		customRun: &tknv1beta1.CustomRun{
-			Spec: tknv1beta1.CustomRunSpec{
-				Params: []tknv1beta1.Param{{
+		customRun: &tektonapibeta.CustomRun{
+			Spec: tektonapibeta.CustomRunSpec{
+				Params: []tektonapibeta.Param{{
 					Name:  "string-array",
-					Value: *tknv1beta1.NewArrayOrString(value, value),
+					Value: *tektonapibeta.NewArrayOrString(value, value),
 				}},
 			},
 		},
-		want: []v1alpha1.ParamValue{{
+		want: []buildapi.ParamValue{{
 			Name: "string-array",
-			Values: []v1alpha1.SingleValue{{
+			Values: []buildapi.SingleValue{{
 				Value: &value,
 			}, {
 				Value: &value,

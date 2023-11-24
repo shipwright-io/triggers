@@ -10,12 +10,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
+	buildapi "github.com/shipwright-io/build/pkg/apis/build/v1beta1"
 	"github.com/shipwright-io/triggers/pkg/constants"
 	clock "k8s.io/utils/clock/testing"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	"knative.dev/pkg/apis"
 )
 
@@ -40,7 +40,7 @@ var (
 
 // pipelineRunReferencesShipwright checks if the informed PipelineRun is referring to a Shipwright
 // resource via TaskRef.
-func pipelineRunReferencesShipwright(pipelineRun *tknv1beta1.PipelineRun) bool {
+func pipelineRunReferencesShipwright(pipelineRun *tektonapi.PipelineRun) bool {
 	if pipelineRun.Status.PipelineSpec == nil {
 		return false
 	}
@@ -61,7 +61,7 @@ func pipelineRunReferencesShipwright(pipelineRun *tknv1beta1.PipelineRun) bool {
 func PipelineRunEventFilterPredicate(obj client.Object) bool {
 	logger := loggerForClientObj(obj, "controller.pipelinerun-filter")
 
-	pipelineRun, ok := obj.(*tknv1beta1.PipelineRun)
+	pipelineRun, ok := obj.(*tektonapi.PipelineRun)
 	if !ok {
 		logger.V(0).Error(nil, "Unable to cast object as Tekton PipelineRun")
 		return false
@@ -88,20 +88,20 @@ func PipelineRunEventFilterPredicate(obj client.Object) bool {
 func ParsePipelineRunStatus(
 	ctx context.Context,
 	now time.Time,
-	pipelineRun *tknv1beta1.PipelineRun,
+	pipelineRun *tektonapi.PipelineRun,
 ) (string, error) {
 	switch {
 	case pipelineRun.IsDone():
 		if pipelineRun.Status.GetCondition(apis.ConditionSucceeded).IsTrue() {
-			return tknv1beta1.PipelineRunReasonSuccessful.String(), nil
+			return tektonapi.PipelineRunReasonSuccessful.String(), nil
 		}
-		return tknv1beta1.PipelineRunReasonFailed.String(), nil
+		return tektonapi.PipelineRunReasonFailed.String(), nil
 	case pipelineRun.IsCancelled():
-		return tknv1beta1.PipelineRunReasonCancelled.String(), nil
+		return tektonapi.PipelineRunReasonCancelled.String(), nil
 	case pipelineRun.HasTimedOut(ctx, clock.NewFakePassiveClock(now)):
 		return "TimedOut", nil
 	case pipelineRun.HasStarted():
-		return tknv1beta1.PipelineRunReasonStarted.String(), nil
+		return tektonapi.PipelineRunReasonStarted.String(), nil
 	default:
 		return "", fmt.Errorf("unable to parse pipelinerun %q current status",
 			pipelineRun.GetNamespacedName())
@@ -112,8 +112,8 @@ func ParsePipelineRunStatus(
 func PipelineRunToObjectRef(
 	ctx context.Context,
 	now time.Time,
-	pipelineRun *tknv1beta1.PipelineRun,
-) (*v1alpha1.WhenObjectRef, error) {
+	pipelineRun *tektonapi.PipelineRun,
+) (*buildapi.WhenObjectRef, error) {
 	status, err := ParsePipelineRunStatus(ctx, now, pipelineRun)
 	if err != nil {
 		return nil, err
@@ -127,7 +127,7 @@ func PipelineRunToObjectRef(
 		}
 	}
 
-	return &v1alpha1.WhenObjectRef{
+	return &buildapi.WhenObjectRef{
 		Name:     pipelineRun.Spec.PipelineRef.Name,
 		Status:   []string{status},
 		Selector: labels,

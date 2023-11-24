@@ -8,7 +8,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
+	buildapi "github.com/shipwright-io/build/pkg/apis/build/v1beta1"
 	"github.com/shipwright-io/triggers/test/stubs"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -31,8 +31,8 @@ var _ = Describe("Build Inventory Controller", Ordered, func() {
 		// amount of instances stored in the Inventory.
 		searchForBuildWithGitHubTriggerFn := func() int {
 			return len(buildInventory.SearchForGit(
-				v1alpha1.GitHubWebHookTrigger,
-				*buildWithGitHubTrigger.Spec.Source.URL,
+				buildapi.GitHubWebHookTrigger,
+				*buildWithGitHubTrigger.Spec.Source.GitSource.URL,
 				stubs.Branch,
 			))
 		}
@@ -46,7 +46,7 @@ var _ = Describe("Build Inventory Controller", Ordered, func() {
 		// the amount of instances found in the Inventory.
 		searchForBuildWithPipelineTriggerFn := func() int {
 			return len(buildInventory.SearchForObjectRef(
-				v1alpha1.PipelineTrigger,
+				buildapi.PipelineTrigger,
 				buildWithPipelineTrigger.Spec.Trigger.When[0].ObjectRef,
 			))
 		}
