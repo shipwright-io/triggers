@@ -10,11 +10,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
+	buildapi "github.com/shipwright-io/build/pkg/apis/build/v1beta1"
 	"github.com/shipwright-io/triggers/controllers"
 	"github.com/shipwright-io/triggers/pkg/inventory"
 
-	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
+	tektonapibeta "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -66,10 +67,13 @@ var _ = BeforeSuite(func() {
 	err = scheme.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = v1alpha1.AddToScheme(scheme.Scheme)
+	err = buildapi.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = tknv1beta1.AddToScheme(scheme.Scheme)
+	err = tektonapi.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = tektonapibeta.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	kubeClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})

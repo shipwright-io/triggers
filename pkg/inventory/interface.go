@@ -5,13 +5,13 @@
 package inventory
 
 import (
-	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
+	buildapi "github.com/shipwright-io/build/pkg/apis/build/v1beta1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
 type Interface interface {
-	Add(*v1alpha1.Build)
+	Add(*buildapi.Build)
 	Remove(types.NamespacedName)
-	SearchForObjectRef(v1alpha1.TriggerType, *v1alpha1.WhenObjectRef) []SearchResult
-	SearchForGit(v1alpha1.TriggerType, string, string) []SearchResult
+	SearchForObjectRef(buildapi.TriggerType, *buildapi.WhenObjectRef) []SearchResult
+	SearchForGit(buildapi.TriggerType, string, string) []SearchResult
 }

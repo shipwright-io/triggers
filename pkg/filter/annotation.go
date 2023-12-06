@@ -9,9 +9,9 @@ import (
 	"encoding/json"
 	"reflect"
 
-	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
+	buildapi "github.com/shipwright-io/build/pkg/apis/build/v1beta1"
 	"github.com/shipwright-io/triggers/pkg/util"
-	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 )
 
 // TriggeredBuild represents previously triggered builds by storing together the original build name
@@ -19,11 +19,11 @@ import (
 // Inventory.
 type TriggeredBuild struct {
 	BuildName string                  `json:"buildName"`
-	ObjectRef *v1alpha1.WhenObjectRef `json:"objectRef"`
+	ObjectRef *buildapi.WhenObjectRef `json:"objectRef"`
 }
 
 // PipelineRunGetAnnotations extract the annotations, return an empty map otherwise.
-func PipelineRunGetAnnotations(pipelineRun *tknv1beta1.PipelineRun) map[string]string {
+func PipelineRunGetAnnotations(pipelineRun *tektonapi.PipelineRun) map[string]string {
 	annotations := pipelineRun.GetAnnotations()
 	if annotations == nil {
 		annotations = map[string]string{}
@@ -31,7 +31,7 @@ func PipelineRunGetAnnotations(pipelineRun *tknv1beta1.PipelineRun) map[string]s
 	return annotations
 }
 
-func PipelineRunAnnotatedNameMatchesObject(pipelineRun *tknv1beta1.PipelineRun) bool {
+func PipelineRunAnnotatedNameMatchesObject(pipelineRun *tektonapi.PipelineRun) bool {
 	annotations := PipelineRunGetAnnotations(pipelineRun)
 	value, ok := annotations[TektonPipelineRunName]
 	if !ok {
@@ -40,7 +40,7 @@ func PipelineRunAnnotatedNameMatchesObject(pipelineRun *tknv1beta1.PipelineRun) 
 	return pipelineRun.GetName() == value
 }
 
-func PipelineRunAnnotateName(pipelineRun *tknv1beta1.PipelineRun) {
+func PipelineRunAnnotateName(pipelineRun *tektonapi.PipelineRun) {
 	annotations := PipelineRunGetAnnotations(pipelineRun)
 	annotations[TektonPipelineRunName] = pipelineRun.GetName()
 	pipelineRun.SetAnnotations(annotations)
@@ -64,7 +64,7 @@ func UnmarshalIntoTriggeredAnnotationSlice(payload string) ([]TriggeredBuild, er
 // valid slice of the type. When the annotation is empty, or not present, an empty slice is returned
 // instead.
 func PipelineRunExtractTriggeredBuildsSlice(
-	pipelineRun *tknv1beta1.PipelineRun,
+	pipelineRun *tektonapi.PipelineRun,
 ) ([]TriggeredBuild, error) {
 	annotations := PipelineRunGetAnnotations(pipelineRun)
 	value, ok := annotations[TektonPipelineRunTriggeredBuilds]
@@ -78,7 +78,7 @@ func PipelineRunExtractTriggeredBuildsSlice(
 func TriggereBuildsContainsObjectRef(
 	triggeredBuilds []TriggeredBuild,
 	buildNames []string,
-	objectRef *v1alpha1.WhenObjectRef,
+	objectRef *buildapi.WhenObjectRef,
 ) bool {
 	for _, entry := range triggeredBuilds {
 		// first of all, the build name must be the same
@@ -103,7 +103,7 @@ func TriggereBuildsContainsObjectRef(
 func AppendIntoTriggeredBuildSliceAsAnnotation(
 	triggeredBuilds []TriggeredBuild,
 	buildNames []string,
-	objectRef *v1alpha1.WhenObjectRef,
+	objectRef *buildapi.WhenObjectRef,
 ) (string, error) {
 	for _, buildName := range buildNames {
 		entry := TriggeredBuild{
@@ -122,10 +122,10 @@ func AppendIntoTriggeredBuildSliceAsAnnotation(
 
 // PipelineRunAppendTriggeredBuildsAnnotation set or update the triggered-builds annotation.
 func PipelineRunAppendTriggeredBuildsAnnotation(
-	pipelineRun *tknv1beta1.PipelineRun,
+	pipelineRun *tektonapi.PipelineRun,
 	triggeredBuilds []TriggeredBuild,
 	buildNames []string,
-	objectRef *v1alpha1.WhenObjectRef,
+	objectRef *buildapi.WhenObjectRef,
 ) error {
 	annotations := pipelineRun.GetAnnotations()
 	if annotations == nil {

@@ -66,6 +66,10 @@ for f in ${SHIPWRIGHT_CRD_FILES[@]}; do
 	URL_BASE="https://${REPO_HOST}/${SHIPWRIGHT_REPO_PATH}"
 	echo "# - ${URL_BASE}/${f}"
 	do_curl "${URL_BASE}" "${f}"
+	# The integration tests run without Conversion, therefore disable it and make beta the stored version
+	goml delete -f "${CRD_DIR}/${f}" -p spec.conversion
+	goml set -f "${CRD_DIR}/${f}" -p spec.versions.name:v1alpha1.storage -v false
+	goml set -f "${CRD_DIR}/${f}" -p spec.versions.name:v1beta1.storage -v true
 done
 
 echo "# Tekton '${TEKTON_VERSION}' CRDs stored at: '${CRD_DIR}'"
@@ -74,4 +78,6 @@ for f in ${TEKTON_CRD_FILES[@]}; do
 	URL_BASE="https://${REPO_HOST}/${TEKTON_REPO_PATH}"
 	echo "# - ${URL_BASE}/${f}"
 	do_curl "${URL_BASE}" "${f}"
+	# The integration tests run without Conversion, therefore disable it
+	goml delete -f "${CRD_DIR}/${f}" -p spec.conversion 2>/dev/null || true
 done

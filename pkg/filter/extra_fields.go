@@ -5,7 +5,7 @@
 package filter
 
 import (
-	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
+	buildapi "github.com/shipwright-io/build/pkg/apis/build/v1beta1"
 
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -30,7 +30,7 @@ func (e *ExtraFields) GetNamespacedName() types.NamespacedName {
 }
 
 // NewExtraFields instantiates a ExtraFields with informed BuildRun.
-func NewExtraFields(br *v1alpha1.BuildRun) ExtraFields {
+func NewExtraFields(br *buildapi.BuildRun) ExtraFields {
 	return ExtraFields{
 		BuildRunNamespace: br.GetNamespace(),
 		BuildRunName:      br.GetName(),

@@ -37,8 +37,8 @@ CHART_DIR ?= ./chart
 MANIFEST_DIR ?= $(CHART_DIR)/generated
 
 # shipwright and tekton target versions to download upstream crd resources
-SHIPWRIGHT_VERSION ?= v0.11.0
-TEKTON_VERSION ?= v0.44.0
+SHIPWRIGHT_VERSION ?= v0.12.0
+TEKTON_VERSION ?= v0.53.2
 
 # full path to the directory where the crds are downloaded
 CRD_DIR ?= $(LOCAL_BIN)/crds

@@ -9,12 +9,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
+	buildapi "github.com/shipwright-io/build/pkg/apis/build/v1beta1"
 	"github.com/shipwright-io/triggers/pkg/filter"
 	"github.com/shipwright-io/triggers/test/stubs"
 	"k8s.io/apimachinery/pkg/types"
 
-	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
+	tektonapibeta "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	. "github.com/onsi/gomega"
@@ -31,22 +32,22 @@ var (
 	gracefulWait = 3 * time.Second
 )
 
-type TektonCustomRunAssertFn func(customRun *tknv1beta1.CustomRun) error
+type TektonCustomRunAssertFn func(customRun *tektonapibeta.CustomRun) error
 
 // assertTektonCustomRun retrieves the Tekton CustomRun instance and execute the informed func with it.
 func assertTektonCustomRun(runNamespacedName types.NamespacedName, fn TektonCustomRunAssertFn) error {
-	var customRun tknv1beta1.CustomRun
+	var customRun tektonapibeta.CustomRun
 	if err := kubeClient.Get(ctx, runNamespacedName, &customRun); err != nil {
 		return err
 	}
 	return fn(&customRun)
 }
 
-type BuildRunAssertFn func(br *v1alpha1.BuildRun) error
+type BuildRunAssertFn func(br *buildapi.BuildRun) error
 
 // assertBuildRun retrieves the BuildRun instance and execute the informed func with it.
 func assertBuildRun(brNamespacedName types.NamespacedName, fn BuildRunAssertFn) error {
-	var br v1alpha1.BuildRun
+	var br buildapi.BuildRun
 	if err := kubeClient.Get(ctx, brNamespacedName, &br); err != nil {
 		return err
 	}
@@ -62,7 +63,7 @@ func eventuallyWithTimeoutFn(fn interface{}) gomegatypes.AsyncAssertion {
 
 // amountOfBuildRunsFn counts the amount of BuildRuns on "default" namespace.
 func amountOfBuildRunsFn() int {
-	var brs v1alpha1.BuildRunList
+	var brs buildapi.BuildRunList
 	err := kubeClient.List(ctx, &brs)
 	if err != nil {
 		return -1
@@ -73,7 +74,7 @@ func amountOfBuildRunsFn() int {
 // deleteAllBuildRuns deletes all BuildRuns using DeleteAllOf ignoring possible not-found errors.
 func deleteAllBuildRuns() error {
 	return client.IgnoreNotFound(
-		kubeClient.DeleteAllOf(ctx, &v1alpha1.BuildRun{},
+		kubeClient.DeleteAllOf(ctx, &buildapi.BuildRun{},
 			client.InNamespace(stubs.Namespace),
 			&client.DeleteAllOfOptions{
 				DeleteOptions: client.DeleteOptions{GracePeriodSeconds: &zero},
@@ -87,7 +88,7 @@ func deleteAllBuildRuns() error {
 //
 //	[0] https://github.com/kubernetes-sigs/controller-runtime/pull/1640
 //	[1] https://github.com/kubernetes-sigs/controller-runtime/issues/1835
-func createAndUpdatePipelineRun(ctx context.Context, pipelineRun *tknv1beta1.PipelineRun) error {
+func createAndUpdatePipelineRun(ctx context.Context, pipelineRun *tektonapi.PipelineRun) error {
 	status := pipelineRun.Status.DeepCopy()
 
 	var err error
@@ -95,7 +96,7 @@ func createAndUpdatePipelineRun(ctx context.Context, pipelineRun *tknv1beta1.Pip
 		return err
 	}
 
-	var created tknv1beta1.PipelineRun
+	var created tektonapi.PipelineRun
 	if err = kubeClient.Get(ctx, client.ObjectKeyFromObject(pipelineRun), &created); err != nil {
 		return err
 	}
@@ -106,13 +107,13 @@ func createAndUpdatePipelineRun(ctx context.Context, pipelineRun *tknv1beta1.Pip
 
 // createAndUpdateCustomRun creates and updates a Run instance, using the same workaround described
 // on createAndUpdatePipelineRun function.
-func createAndUpdateCustomRun(ctx context.Context, customRun *tknv1beta1.CustomRun) error {
+func createAndUpdateCustomRun(ctx context.Context, customRun *tektonapibeta.CustomRun) error {
 	err := kubeClient.Create(ctx, customRun)
 	if err != nil {
 		return err
 	}
 
-	var created tknv1beta1.CustomRun
+	var created tektonapibeta.CustomRun
 	if err = kubeClient.Get(ctx, client.ObjectKeyFromObject(customRun), &created); err != nil {
 		return err
 	}
@@ -126,7 +127,7 @@ func createAndUpdateCustomRun(ctx context.Context, customRun *tknv1beta1.CustomR
 func extractBuildRunNamespacedNameFromCustomRunExtraFields(
 	runNamespacedName types.NamespacedName,
 ) (*types.NamespacedName, error) {
-	var customRun tknv1beta1.CustomRun
+	var customRun tektonapibeta.CustomRun
 	err := kubeClient.Get(ctx, runNamespacedName, &customRun)
 	if err != nil {
 		return nil, err

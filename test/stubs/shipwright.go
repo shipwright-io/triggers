@@ -7,7 +7,7 @@ package stubs
 import (
 	"fmt"
 
-	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
+	buildapi "github.com/shipwright-io/build/pkg/apis/build/v1beta1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -20,19 +20,19 @@ const (
 
 var (
 	// TriggerWhenPushToMain describes a trigger for a github push event on default branch.
-	TriggerWhenPushToMain = v1alpha1.TriggerWhen{
-		Type: v1alpha1.GitHubWebHookTrigger,
-		GitHub: &v1alpha1.WhenGitHub{
-			Events: []v1alpha1.GitHubEventName{
-				v1alpha1.GitHubPushEvent,
+	TriggerWhenPushToMain = buildapi.TriggerWhen{
+		Type: buildapi.GitHubWebHookTrigger,
+		GitHub: &buildapi.WhenGitHub{
+			Events: []buildapi.GitHubEventName{
+				buildapi.GitHubPushEvent,
 			},
 			Branches: []string{Branch},
 		},
 	}
 	// TriggerWhenPipelineSucceeded describes a trigger for Tekton Pipeline on status "succeeded".
-	TriggerWhenPipelineSucceeded = v1alpha1.TriggerWhen{
-		Type: v1alpha1.PipelineTrigger,
-		ObjectRef: &v1alpha1.WhenObjectRef{
+	TriggerWhenPipelineSucceeded = buildapi.TriggerWhen{
+		Type: buildapi.PipelineTrigger,
+		ObjectRef: &buildapi.WhenObjectRef{
 			Name:     PipelineNameInTrigger,
 			Status:   []string{"Succeeded"},
 			Selector: map[string]string{},
@@ -41,25 +41,28 @@ var (
 )
 
 // ShipwrightBuild returns a Build using informed output image base and name.
-func ShipwrightBuild(outputImageBase, name string) *v1alpha1.Build {
-	strategyKind := v1alpha1.BuildStrategyKind("ClusterBuildStrategy")
+func ShipwrightBuild(outputImageBase, name string) *buildapi.Build {
+	strategyKind := buildapi.BuildStrategyKind("ClusterBuildStrategy")
 	contextDir := "source-build"
 
-	return &v1alpha1.Build{
+	return &buildapi.Build{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: Namespace,
 			Name:      name,
 		},
-		Spec: v1alpha1.BuildSpec{
-			Strategy: v1alpha1.Strategy{
+		Spec: buildapi.BuildSpec{
+			Strategy: buildapi.Strategy{
 				Kind: &strategyKind,
 				Name: "buildpacks-v3",
 			},
-			Source: v1alpha1.Source{
-				URL:        &RepoURL,
+			Source: buildapi.Source{
+				Type: buildapi.GitType,
+				GitSource: &buildapi.Git{
+					URL: &RepoURL,
+				},
 				ContextDir: &contextDir,
 			},
-			Output: v1alpha1.Image{
+			Output: buildapi.Image{
 				Image: fmt.Sprintf("%s/%s:latest", outputImageBase, name),
 			},
 		},
@@ -70,16 +73,16 @@ func ShipwrightBuild(outputImageBase, name string) *v1alpha1.Build {
 func ShipwrightBuildWithTriggers(
 	outputImageBase,
 	name string,
-	triggers ...v1alpha1.TriggerWhen,
-) *v1alpha1.Build {
+	triggers ...buildapi.TriggerWhen,
+) *buildapi.Build {
 	b := ShipwrightBuild(outputImageBase, name)
-	b.Spec.Trigger = &v1alpha1.Trigger{When: triggers}
+	b.Spec.Trigger = &buildapi.Trigger{When: triggers}
 	return b
 }
 
 // ShipwrightBuildRun returns a empty BuildRun instance using informed name.
-func ShipwrightBuildRun(name string) *v1alpha1.BuildRun {
-	return &v1alpha1.BuildRun{
+func ShipwrightBuildRun(name string) *buildapi.BuildRun {
+	return &buildapi.BuildRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: Namespace,
 			Name:      name,

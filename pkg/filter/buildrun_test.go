@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
+	buildapi "github.com/shipwright-io/build/pkg/apis/build/v1beta1"
 	"github.com/shipwright-io/triggers/pkg/constants"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -17,11 +17,11 @@ import (
 func TestExtractBuildRunCustomRunOwner(t *testing.T) {
 	tests := []struct {
 		name string
-		br   *v1alpha1.BuildRun
+		br   *buildapi.BuildRun
 		want *types.NamespacedName
 	}{{
 		name: "buildrun not owned by tekton customrun",
-		br: &v1alpha1.BuildRun{
+		br: &buildapi.BuildRun{
 			ObjectMeta: metav1.ObjectMeta{
 				OwnerReferences: []metav1.OwnerReference{},
 			},
@@ -29,7 +29,7 @@ func TestExtractBuildRunCustomRunOwner(t *testing.T) {
 		want: nil,
 	}, {
 		name: "buildrun owned by tekton customrun",
-		br: &v1alpha1.BuildRun{
+		br: &buildapi.BuildRun{
 			ObjectMeta: metav1.ObjectMeta{
 				OwnerReferences: []metav1.OwnerReference{{
 					APIVersion: constants.TektonAPIv1beta1,

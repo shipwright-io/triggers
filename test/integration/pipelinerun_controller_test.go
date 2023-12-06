@@ -11,7 +11,7 @@ import (
 	"github.com/shipwright-io/triggers/pkg/filter"
 	"github.com/shipwright-io/triggers/test/stubs"
 
-	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -93,7 +93,7 @@ var _ = Describe("PipelineRun Controller", Ordered, func() {
 			eventuallyWithTimeoutFn(amountOfBuildRunsFn).Should(Equal(1))
 
 			eventuallyWithTimeoutFn(func() bool {
-				var pr tknv1beta1.PipelineRun
+				var pr tektonapi.PipelineRun
 				if err := kubeClient.Get(ctx, pipelineRun.GetNamespacedName(), &pr); err != nil {
 					return false
 				}

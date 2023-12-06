@@ -7,7 +7,7 @@ package controllers
 import (
 	"context"
 
-	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
+	buildapi "github.com/shipwright-io/build/pkg/apis/build/v1beta1"
 	"github.com/shipwright-io/triggers/pkg/inventory"
 
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -32,7 +32,7 @@ type InventoryReconciler struct {
 func (r *InventoryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
-	var b v1alpha1.Build
+	var b buildapi.Build
 	if err := r.Get(ctx, req.NamespacedName, &b); err != nil {
 		if !errors.IsNotFound(err) {
 			logger.Error(err, "Unable to fetch Build, removing from the Inventory")
@@ -59,7 +59,7 @@ func (r *InventoryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.Build{}).
+		For(&buildapi.Build{}).
 		Complete(r)
 }
 

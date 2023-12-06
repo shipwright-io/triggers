@@ -7,7 +7,7 @@ package inventory
 import (
 	"sync"
 
-	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
+	buildapi "github.com/shipwright-io/build/pkg/apis/build/v1beta1"
 	"github.com/shipwright-io/triggers/pkg/util"
 
 	"github.com/go-logr/logr"
@@ -30,20 +30,20 @@ var _ Interface = &Inventory{}
 
 // TriggerRules keeps the source and webhook trigger information for each Build instance.
 type TriggerRules struct {
-	source  v1alpha1.Source
-	trigger v1alpha1.Trigger
+	source  buildapi.Source
+	trigger buildapi.Trigger
 }
 
 // SearchFn search function signature.
 type SearchFn func(TriggerRules) bool
 
 // Add insert or update an existing record.
-func (i *Inventory) Add(b *v1alpha1.Build) {
+func (i *Inventory) Add(b *buildapi.Build) {
 	i.m.Lock()
 	defer i.m.Unlock()
 
 	if b.Spec.Trigger == nil {
-		b.Spec.Trigger = &v1alpha1.Trigger{}
+		b.Spec.Trigger = &buildapi.Trigger{}
 	}
 	buildName := types.NamespacedName{Namespace: b.GetNamespace(), Name: b.GetName()}
 	i.logger.V(0).Info(
@@ -73,7 +73,7 @@ func (i *Inventory) Remove(buildName types.NamespacedName) {
 
 // loopByWhenType execute the search function informed against each inventory entry, when it returns
 // true it returns the build name on the search results instance.
-func (i *Inventory) loopByWhenType(triggerType v1alpha1.TriggerType, fn SearchFn) []SearchResult {
+func (i *Inventory) loopByWhenType(triggerType buildapi.TriggerType, fn SearchFn) []SearchResult {
 	found := []SearchResult{}
 	for k, v := range i.cache {
 		for _, when := range v.trigger.When {
@@ -82,9 +82,9 @@ func (i *Inventory) loopByWhenType(triggerType v1alpha1.TriggerType, fn SearchFn
 			}
 			if fn(v) {
 				secretName := types.NamespacedName{}
-				if v.trigger.SecretRef != nil {
+				if v.trigger.TriggerSecret != nil {
 					secretName.Namespace = k.Namespace
-					secretName.Name = v.trigger.SecretRef.Name
+					secretName.Name = *v.trigger.TriggerSecret
 				}
 				found = append(found, SearchResult{
 					BuildName:  k,
@@ -100,8 +100,8 @@ func (i *Inventory) loopByWhenType(triggerType v1alpha1.TriggerType, fn SearchFn
 
 // SearchForObjectRef search for builds using the ObjectRef as query parameters.
 func (i *Inventory) SearchForObjectRef(
-	triggerType v1alpha1.TriggerType,
-	objectRef *v1alpha1.WhenObjectRef,
+	triggerType buildapi.TriggerType,
+	objectRef *buildapi.WhenObjectRef,
 ) []SearchResult {
 	i.m.Lock()
 	defer i.m.Unlock()
@@ -153,7 +153,7 @@ func (i *Inventory) SearchForObjectRef(
 // SearchForGit search for builds using the Git repository details, like the URL, branch name and
 // such type of information.
 func (i *Inventory) SearchForGit(
-	triggerType v1alpha1.TriggerType,
+	triggerType buildapi.TriggerType,
 	repoURL string,
 	branch string,
 ) []SearchResult {
@@ -163,7 +163,13 @@ func (i *Inventory) SearchForGit(
 	return i.loopByWhenType(triggerType, func(tr TriggerRules) bool {
 		// first thing to compare, is the repository URL, it must match in order to define the actual
 		// builds that are representing the repository
-		if !CompareURLs(repoURL, *tr.source.URL) {
+		if tr.source.GitSource == nil {
+			return false
+		}
+		if tr.source.GitSource.URL == nil {
+			return false
+		}
+		if !CompareURLs(repoURL, *tr.source.GitSource.URL) {
 			return false
 		}
 

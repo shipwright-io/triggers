@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
+	buildapi "github.com/shipwright-io/build/pkg/apis/build/v1beta1"
 	"github.com/shipwright-io/triggers/pkg/filter"
 	"github.com/shipwright-io/triggers/test/stubs"
 
-	tknv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonapibeta "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -40,7 +40,7 @@ var _ = Describe("CustomRun Controller", Ordered, Serial, func() {
 				return err
 			}
 
-			return assertBuildRun(*brNamespacedName, func(br *v1alpha1.BuildRun) error {
+			return assertBuildRun(*brNamespacedName, func(br *buildapi.BuildRun) error {
 				brOwner := filter.ExtractBuildRunCustomRunOwner(br)
 				if brOwner == nil {
 					return fmt.Errorf("BuildRun doesn't have the owner set")
@@ -57,7 +57,7 @@ var _ = Describe("CustomRun Controller", Ordered, Serial, func() {
 
 		// assertTektonCustomRunUnknownCondition inspects the informed Tekton CustomRun instance to make sure the
 		// condition recorded is "unknown".
-		assertTektonCustomRunUnknownCondition := func(customRun *tknv1beta1.CustomRun) error {
+		assertTektonCustomRunUnknownCondition := func(customRun *tektonapibeta.CustomRun) error {
 			if len(customRun.Status.Conditions) != 1 {
 				return fmt.Errorf("Unexpected amount of conditions on Tekton CustomRun status")
 			}
@@ -75,7 +75,7 @@ var _ = Describe("CustomRun Controller", Ordered, Serial, func() {
 		// assertBuildRunConditionIsReflectedOnTektonCustomRun inspects the informed Tekton CustomRun object to
 		// assert one of its conditions matches the informed last-transition-time.
 		assertBuildRunConditionIsReflectedOnTektonCustomRun := func(
-			customRun *tknv1beta1.CustomRun,
+			customRun *tektonapibeta.CustomRun,
 			LastTransitionTime metav1.Time,
 		) error {
 			for _, c := range customRun.Status.Conditions {
@@ -89,7 +89,7 @@ var _ = Describe("CustomRun Controller", Ordered, Serial, func() {
 
 		// testTektonCustomRunTriggersBuildRun test case making sure the informed run instance has
 		// triggered BuildRuns accordingly.
-		testTektonCustomRunTriggersBuildRun := func(customRun *tknv1beta1.CustomRun) types.NamespacedName {
+		testTektonCustomRunTriggersBuildRun := func(customRun *tektonapibeta.CustomRun) types.NamespacedName {
 			By("Issuing a new Tekton CustomRun instance referencing Shipwright")
 			Expect(createAndUpdateCustomRun(ctx, customRun)).Should(Succeed())
 			runNamespacedName := client.ObjectKeyFromObject(customRun)
@@ -127,10 +127,10 @@ var _ = Describe("CustomRun Controller", Ordered, Serial, func() {
 		// updateBuildRunCondition updates the BuildRun with the condition.
 		updateBuildRunCondition := func(
 			brNamespacedName types.NamespacedName,
-			condition v1alpha1.Condition,
+			condition buildapi.Condition,
 		) error {
-			return assertBuildRun(brNamespacedName, func(br *v1alpha1.BuildRun) error {
-				br.Status = v1alpha1.BuildRunStatus{Conditions: []v1alpha1.Condition{condition}}
+			return assertBuildRun(brNamespacedName, func(br *buildapi.BuildRun) error {
+				br.Status = buildapi.BuildRunStatus{Conditions: []buildapi.Condition{condition}}
 				return kubeClient.Status().Update(ctx, br)
 			})
 		}
@@ -141,8 +141,8 @@ var _ = Describe("CustomRun Controller", Ordered, Serial, func() {
 			brNamespacedName types.NamespacedName,
 			lastTransitionTime metav1.Time,
 		) error {
-			return updateBuildRunCondition(brNamespacedName, v1alpha1.Condition{
-				Type:               v1alpha1.Succeeded,
+			return updateBuildRunCondition(brNamespacedName, buildapi.Condition{
+				Type:               buildapi.Succeeded,
 				Status:             corev1.ConditionTrue,
 				LastTransitionTime: lastTransitionTime,
 				Reason:             "reason",
@@ -152,8 +152,8 @@ var _ = Describe("CustomRun Controller", Ordered, Serial, func() {
 
 		// updateBuildRunStatusMarkAsFailed marks the BuildRun as failed.
 		updateBuildRunStatusMarkAsFailed := func(brNamespacedName types.NamespacedName) error {
-			return updateBuildRunCondition(brNamespacedName, v1alpha1.Condition{
-				Type:               v1alpha1.Succeeded,
+			return updateBuildRunCondition(brNamespacedName, buildapi.Condition{
+				Type:               buildapi.Succeeded,
 				Status:             corev1.ConditionFalse,
 				LastTransitionTime: metav1.Now(),
 				Reason:             "failed",
@@ -211,7 +211,7 @@ var _ = Describe("CustomRun Controller", Ordered, Serial, func() {
 			eventuallyWithTimeoutFn(func() error {
 				return assertTektonCustomRun(
 					client.ObjectKeyFromObject(customRun),
-					func(r *tknv1beta1.CustomRun) error {
+					func(r *tektonapibeta.CustomRun) error {
 						return assertBuildRunConditionIsReflectedOnTektonCustomRun(r, lastTransitionTime)
 					},
 				)
@@ -245,7 +245,7 @@ var _ = Describe("CustomRun Controller", Ordered, Serial, func() {
 			eventuallyWithTimeoutFn(func() error {
 				return assertTektonCustomRun(
 					client.ObjectKeyFromObject(customRun),
-					func(r *tknv1beta1.CustomRun) error {
+					func(r *tektonapibeta.CustomRun) error {
 						if r.IsSuccessful() {
 							return fmt.Errorf("run %q is marked as successful", r.GetName())
 						}
@@ -273,12 +273,12 @@ var _ = Describe("CustomRun Controller", Ordered, Serial, func() {
 				By(fmt.Sprintf("Canceling the Tekton CustomRun %q", customRun.GetName()))
 
 				originalRun := customRun.DeepCopy()
-				customRun.Spec.Status = tknv1beta1.CustomRunSpecStatusCancelled
+				customRun.Spec.Status = tektonapibeta.CustomRunSpecStatusCancelled
 
 				eventuallyWithTimeoutFn(func() error {
 					return assertTektonCustomRun(
 						client.ObjectKeyFromObject(customRun),
-						func(r *tknv1beta1.CustomRun) error {
+						func(r *tektonapibeta.CustomRun) error {
 							return kubeClient.Patch(ctx, customRun, client.MergeFrom(originalRun))
 						},
 					)
@@ -289,7 +289,7 @@ var _ = Describe("CustomRun Controller", Ordered, Serial, func() {
 			eventuallyWithTimeoutFn(func() error {
 				return assertBuildRun(
 					brNamespacedName,
-					func(br *v1alpha1.BuildRun) error {
+					func(br *buildapi.BuildRun) error {
 						if !br.IsCanceled() {
 							return fmt.Errorf("the BuildRun %q should be cancelled", br.GetName())
 						}
