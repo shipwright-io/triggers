@@ -6,7 +6,7 @@ require (
 	github.com/go-logr/logr v1.4.1
 	github.com/google/go-github/v53 v53.2.0
 	github.com/onsi/ginkgo/v2 v2.15.0
-	github.com/onsi/gomega v1.31.0
+	github.com/onsi/gomega v1.31.1
 	github.com/shipwright-io/build v0.12.0
 	github.com/tektoncd/pipeline v0.47.4
 	k8s.io/api v0.26.9
