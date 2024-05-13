@@ -32,7 +32,7 @@ var _ = Describe("Build Inventory Controller", Ordered, func() {
 		searchForBuildWithGitHubTriggerFn := func() int {
 			return len(buildInventory.SearchForGit(
 				buildapi.GitHubWebHookTrigger,
-				*buildWithGitHubTrigger.Spec.Source.GitSource.URL,
+				buildWithGitHubTrigger.Spec.Source.Git.URL,
 				stubs.Branch,
 			))
 		}
