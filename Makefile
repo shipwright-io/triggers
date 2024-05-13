@@ -25,11 +25,11 @@ KO_DOCKER_REPO ?= $(IMAGE_HOST)/$(IMAGE_NAMESPACE)
 KO_OPTS ?= --base-import-paths --tags=${IMAGE_TAG}
 
 # controller-gen version and full path to the executable
-CONTROLLER_TOOLS_VERSION ?= v0.10.0
+CONTROLLER_TOOLS_VERSION ?= v0.12.1
 CONTROLLER_GEN ?= $(LOCAL_BIN)/controller-gen
 
 # envtest version and full path to the executable
-ENVTEST_K8S_VERSION ?= 1.25
+ENVTEST_K8S_VERSION ?= 1.27
 ENVTEST ?= $(LOCAL_BIN)/setup-envtest
 
 # chart base directory and path to the "templates" folder
@@ -37,7 +37,7 @@ CHART_DIR ?= ./chart
 MANIFEST_DIR ?= $(CHART_DIR)/generated
 
 # shipwright and tekton target versions to download upstream crd resources
-SHIPWRIGHT_VERSION ?= v0.12.0
+SHIPWRIGHT_VERSION ?= v0.13.0
 TEKTON_VERSION ?= v0.53.2
 
 # full path to the directory where the crds are downloaded
@@ -120,11 +120,12 @@ test-unit:
 	go test $(GOFLAGS_TEST) $(ARGS) ./pkg/... ./controllers/...
 
 # installs latest envtest-setup, if necessary
+# The latest version depends on Go 1.22, therefore a pinned version is used
 .PHONY: envtest
 envtest: GOBIN=$(LOCAL_BIN)
 envtest: $(ENVTEST)
 $(ENVTEST):
-	go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+	go install sigs.k8s.io/controller-runtime/tools/setup-envtest@v0.0.0-20230927023946-553bd00cfec5
 
 # run integration tests, with optional arguments
 .PHONY: test-integration
