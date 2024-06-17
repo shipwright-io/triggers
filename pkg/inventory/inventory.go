@@ -30,7 +30,7 @@ var _ Interface = &Inventory{}
 
 // TriggerRules keeps the source and webhook trigger information for each Build instance.
 type TriggerRules struct {
-	source  buildapi.Source
+	source  *buildapi.Source
 	trigger buildapi.Trigger
 }
 
@@ -42,9 +42,11 @@ func (i *Inventory) Add(b *buildapi.Build) {
 	i.m.Lock()
 	defer i.m.Unlock()
 
-	if b.Spec.Trigger == nil {
-		b.Spec.Trigger = &buildapi.Trigger{}
+	trigger := b.Spec.Trigger
+	if trigger == nil {
+		trigger = &buildapi.Trigger{}
 	}
+
 	buildName := types.NamespacedName{Namespace: b.GetNamespace(), Name: b.GetName()}
 	i.logger.V(0).Info(
 		"Storing Build on the inventory",
@@ -54,7 +56,7 @@ func (i *Inventory) Add(b *buildapi.Build) {
 	)
 	i.cache[buildName] = TriggerRules{
 		source:  b.Spec.Source,
-		trigger: *b.Spec.Trigger,
+		trigger: *trigger,
 	}
 }
 
@@ -163,13 +165,16 @@ func (i *Inventory) SearchForGit(
 	return i.loopByWhenType(triggerType, func(tr TriggerRules) bool {
 		// first thing to compare, is the repository URL, it must match in order to define the actual
 		// builds that are representing the repository
-		if tr.source.GitSource == nil {
+		if tr.source == nil {
 			return false
 		}
-		if tr.source.GitSource.URL == nil {
+		if tr.source.Type != buildapi.GitType {
 			return false
 		}
-		if !CompareURLs(repoURL, *tr.source.GitSource.URL) {
+		if tr.source.Git == nil {
+			return false
+		}
+		if !CompareURLs(repoURL, tr.source.Git.URL) {
 			return false
 		}
 

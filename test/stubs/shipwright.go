@@ -55,10 +55,10 @@ func ShipwrightBuild(outputImageBase, name string) *buildapi.Build {
 				Kind: &strategyKind,
 				Name: "buildpacks-v3",
 			},
-			Source: buildapi.Source{
+			Source: &buildapi.Source{
 				Type: buildapi.GitType,
-				GitSource: &buildapi.Git{
-					URL: &RepoURL,
+				Git: &buildapi.Git{
+					URL: RepoURL,
 				},
 				ContextDir: &contextDir,
 			},
