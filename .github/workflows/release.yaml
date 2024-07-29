@@ -5,7 +5,7 @@ on:
     inputs:
       release:
         description: 'Desired tag'
-        required: true 
+        required: true
       tags:
         description: 'Previous tag'
         required: true
@@ -51,7 +51,7 @@ jobs:
         prerelease: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  
+
     - name: Generate and upload release.yaml
       env:
         REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
@@ -67,4 +67,3 @@ jobs:
             -a sha=${{ github.sha }} \
             -a run_id=${{ github.run_id }} \
             -a run_attempt=${{ github.run_attempt }}
-  
