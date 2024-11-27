@@ -25,11 +25,11 @@ KO_DOCKER_REPO ?= $(IMAGE_HOST)/$(IMAGE_NAMESPACE)
 KO_OPTS ?= --base-import-paths --tags=${IMAGE_TAG}
 
 # controller-gen version and full path to the executable
-CONTROLLER_TOOLS_VERSION ?= v0.12.1
+CONTROLLER_TOOLS_VERSION ?= v0.15.0
 CONTROLLER_GEN ?= $(LOCAL_BIN)/controller-gen
 
 # envtest version and full path to the executable
-ENVTEST_K8S_VERSION ?= 1.27
+ENVTEST_K8S_VERSION ?= 1.29
 ENVTEST ?= $(LOCAL_BIN)/setup-envtest
 
 # chart base directory and path to the "templates" folder
@@ -37,8 +37,8 @@ CHART_DIR ?= ./chart
 MANIFEST_DIR ?= $(CHART_DIR)/generated
 
 # shipwright and tekton target versions to download upstream crd resources
-SHIPWRIGHT_VERSION ?= v0.13.0
-TEKTON_VERSION ?= v0.53.2
+SHIPWRIGHT_VERSION ?= v0.14.0
+TEKTON_VERSION ?= v0.56.8
 
 # full path to the directory where the crds are downloaded
 CRD_DIR ?= $(LOCAL_BIN)/crds
