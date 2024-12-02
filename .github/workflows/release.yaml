@@ -24,7 +24,7 @@ jobs:
       TAG: ${{ github.event.inputs.release }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: ./.github/actions/setup
     - uses: sigstore/cosign-installer@v3
     - uses: azure/setup-helm@v3.5
