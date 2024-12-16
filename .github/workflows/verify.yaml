@@ -19,7 +19,7 @@ jobs:
     name: generate
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - uses: ./.github/actions/setup
 
@@ -32,9 +32,8 @@ jobs:
     name: golangci-lint
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v3
-
+      uses: actions/checkout@v4
     - name: golangci-lint
-      uses: golangci/golangci-lint-action@v3
+      uses: golangci/golangci-lint-action@v6
       with:
         args: --timeout=10m

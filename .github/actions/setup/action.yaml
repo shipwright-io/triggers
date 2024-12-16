@@ -9,12 +9,12 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: actions/setup-go@v3
+    - uses: actions/setup-go@v5
       with:
         go-version: ${{ inputs.go-version }}
         cache: true
         check-latest: true
-    - uses: ko-build/setup-ko@v0.6
+    - uses: ko-build/setup-ko@v0.7
     - name: install-goml
       shell: bash
       run: |
