@@ -302,8 +302,8 @@ github.com/rogpeppe/fastuuid v1.2.0/go.mod h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6L
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR38lUII=
 github.com/rogpeppe/go-internal v1.13.1/go.mod h1:uMEvuHeurkdAXX61udpOXGD/AzZDWNMNyH2VO9fmH0o=
-github.com/shipwright-io/build v0.15.0 h1:fCBp1jesE/Z0/QJOQnjSckSrSj3W6IbJ88DEe1/urDM=
-github.com/shipwright-io/build v0.15.0/go.mod h1:CKAprlcWQbuGKStxj3DlwZgqHfc2ph8qRFz5yyAS+zo=
+github.com/shipwright-io/build v0.15.1 h1:3jusd2UXOUt8pNa70yaw5vFPOHo/l1BppaGMpgdie2Q=
+github.com/shipwright-io/build v0.15.1/go.mod h1:xfo5DvRZT98fu2amdDBQkD80WF2Ejx+l7uiAWqXBFRA=
 github.com/sirupsen/logrus v1.2.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=
 github.com/sirupsen/logrus v1.4.2/go.mod h1:tLMulIdttU9McNUspp0xgXVQah82FyeX6MwdIuYE2rE=
 github.com/sirupsen/logrus v1.6.0/go.mod h1:7uNnSEd1DgxDLC74fIahvMZmmYsHGZGEOFrfsX/uA88=
