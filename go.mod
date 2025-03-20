@@ -7,7 +7,7 @@ require (
 	github.com/google/go-github/v53 v53.2.0
 	github.com/onsi/ginkgo/v2 v2.23.1
 	github.com/onsi/gomega v1.36.2
-	github.com/shipwright-io/build v0.15.2
+	github.com/shipwright-io/build v0.15.3
 	github.com/tektoncd/pipeline v0.68.0
 	k8s.io/api v0.30.9
 	k8s.io/apimachinery v0.30.9
@@ -71,7 +71,7 @@ require (
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/crypto v0.35.0 // indirect
 	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa // indirect
-	golang.org/x/net v0.35.0 // indirect
+	golang.org/x/net v0.36.0 // indirect
 	golang.org/x/oauth2 v0.27.0 // indirect
 	golang.org/x/sync v0.11.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
