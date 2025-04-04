@@ -2,12 +2,14 @@ module github.com/shipwright-io/triggers
 
 go 1.23.0
 
+toolchain go1.24.1
+
 require (
 	github.com/go-logr/logr v1.4.2
 	github.com/google/go-github/v53 v53.2.0
 	github.com/onsi/ginkgo/v2 v2.23.3
 	github.com/onsi/gomega v1.36.3
-	github.com/shipwright-io/build v0.15.4
+	github.com/shipwright-io/build v0.15.5
 	github.com/tektoncd/pipeline v0.68.0
 	k8s.io/api v0.30.9
 	k8s.io/apimachinery v0.30.9
