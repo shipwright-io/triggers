@@ -268,7 +268,7 @@ github.com/prometheus/procfs/internal/util
 ## explicit; go 1.22
 github.com/prometheus/statsd_exporter/pkg/mapper
 github.com/prometheus/statsd_exporter/pkg/mapper/fsm
-# github.com/shipwright-io/build v0.15.4
+# github.com/shipwright-io/build v0.15.7
 ## explicit; go 1.23.0
 github.com/shipwright-io/build/pkg/apis/build/v1alpha1
 github.com/shipwright-io/build/pkg/apis/build/v1beta1
@@ -346,7 +346,7 @@ golang.org/x/crypto/sha3
 ## explicit; go 1.23.0
 golang.org/x/exp/maps
 golang.org/x/exp/slices
-# golang.org/x/net v0.37.0
+# golang.org/x/net v0.38.0
 ## explicit; go 1.23.0
 golang.org/x/net/html
 golang.org/x/net/html/atom
