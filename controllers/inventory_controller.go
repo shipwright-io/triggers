@@ -41,7 +41,7 @@ func (r *InventoryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return RequeueOnError(client.IgnoreNotFound(err))
 	}
 
-	if b.ObjectMeta.DeletionTimestamp.IsZero() {
+	if b.DeletionTimestamp.IsZero() {
 		logger.V(0).Info("Adding Build on the Inventory")
 		r.buildInventory.Add(&b)
 	} else {

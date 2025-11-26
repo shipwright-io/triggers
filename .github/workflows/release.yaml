@@ -27,14 +27,14 @@ jobs:
       TAG: ${{ github.event.inputs.release }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         ref: ${{ github.event.inputs.git-ref }}
     - uses: ./.github/actions/setup
     - uses: sigstore/cosign-installer@v3
-    - uses: azure/setup-helm@v3.5
+    - uses: azure/setup-helm@v4
       with:
-        version: v3.8.0
+        version: v3.19.2
 
     - name: Build Release Changelog
       env:

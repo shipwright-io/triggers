@@ -65,7 +65,7 @@ func (r *PipelineRunReconciler) createBuildRun(
 			},
 		},
 	}
-	if err := r.Client.Create(ctx, &br); err != nil {
+	if err := r.Create(ctx, &br); err != nil {
 		return "", err
 	}
 	return br.GetName(), nil
@@ -111,7 +111,7 @@ func (r *PipelineRunReconciler) Reconcile(
 
 	// creating a objectRef based on the informed PipelineRun, the instance is informed to the
 	// inventory query interface to list Shipwright Builds that should be triggered
-	objectRef, err := filter.PipelineRunToObjectRef(ctx, r.Clock.Now(), &pipelineRun)
+	objectRef, err := filter.PipelineRunToObjectRef(ctx, r.Now(), &pipelineRun)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -183,7 +183,7 @@ func (r *PipelineRunReconciler) Reconcile(
 	filter.PipelineRunAnnotateName(&pipelineRun)
 
 	// patching the PipelineRun to reflect labels and annotations needed on the object
-	if err = r.Client.Patch(ctx, &pipelineRun, client.MergeFrom(originalPipelineRun)); err != nil {
+	if err = r.Patch(ctx, &pipelineRun, client.MergeFrom(originalPipelineRun)); err != nil {
 		logger.V(0).Error(err, "trying to update PipelineRun metadata")
 		return RequeueOnError(err)
 	}

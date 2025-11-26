@@ -16,7 +16,7 @@ jobs:
     name: unit
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - uses: ./.github/actions/setup
       - name: test-unit
         run: make test-unit
@@ -25,7 +25,7 @@ jobs:
     name: integration
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - uses: ./.github/actions/setup
       - name: test-integration
         run: make test-integration
@@ -35,7 +35,7 @@ jobs:
   #   runs-on: ubuntu-latest
   #   steps:
   #     - name: Checkout Code
-  #       uses: actions/checkout@v4
+  #       uses: actions/checkout@v6
   #     - uses: ./.github/actions/setup
   #     - uses: ./.github/actions/shipwright
 

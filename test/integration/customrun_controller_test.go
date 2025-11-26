@@ -79,7 +79,7 @@ var _ = Describe("CustomRun Controller", Ordered, Serial, func() {
 			LastTransitionTime metav1.Time,
 		) error {
 			for _, c := range customRun.Status.Conditions {
-				if c.LastTransitionTime.Inner.Time.Unix() >= LastTransitionTime.Unix() {
+				if c.LastTransitionTime.Inner.Unix() >= LastTransitionTime.Unix() {
 					return nil
 				}
 			}
