@@ -45,7 +45,7 @@ type CustomRunReconciler struct {
 // generateBuildRun generates a BuildRun instance owned by the informed Tekton CustomRun object, the
 // BuildRun name is randomly generated using the Run's name as base.
 func (r *CustomRunReconciler) generateBuildRun(
-	ctx context.Context,
+	logger logr.Logger,
 	customRun *tektonapibeta.CustomRun,
 ) (*buildapi.BuildRun, error) {
 	br := buildapi.BuildRun{
@@ -64,6 +64,35 @@ func (r *CustomRunReconciler) generateBuildRun(
 			Timeout:     customRun.Spec.Timeout,
 		},
 	}
+
+	for _, workspaceBinding := range customRun.Spec.Workspaces {
+		if workspaceBinding.Name == "shp-source" {
+			br.Annotations = map[string]string{
+				"source-workspace": "shp-source",
+			}
+
+			// TODO use subPath as context directory
+		} else {
+			if workspaceBinding.SubPath != "" {
+				// TODO should we fail ?
+				logger.Info("SubPath is ignored", "namespace", customRun.Namespace, "name", customRun.Name, "workspace", workspaceBinding.SubPath)
+			}
+
+			br.Spec.Volumes = append(br.Spec.Volumes, buildapi.BuildVolume{
+				Name: workspaceBinding.Name,
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap:             workspaceBinding.ConfigMap,
+					CSI:                   workspaceBinding.CSI,
+					EmptyDir:              workspaceBinding.EmptyDir,
+					PersistentVolumeClaim: workspaceBinding.PersistentVolumeClaim,
+					Projected:             workspaceBinding.Projected,
+					Secret:                workspaceBinding.Secret,
+				},
+			})
+		}
+
+	}
+
 	err := controllerutil.SetControllerReference(customRun, &br, r.Scheme)
 	if err != nil {
 		return nil, err
@@ -126,8 +155,8 @@ func (r *CustomRunReconciler) Reconcile(
 ) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
-	var customRun tektonapibeta.CustomRun
-	err := r.Get(ctx, req.NamespacedName, &customRun)
+	customRun := &tektonapibeta.CustomRun{}
+	err := r.Get(ctx, req.NamespacedName, customRun)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			logger.Error(err, "Unable to fetch Run")
@@ -162,7 +191,7 @@ func (r *CustomRunReconciler) Reconcile(
 			return Done()
 		}
 
-		if br, err = r.generateBuildRun(ctx, &customRun); err != nil {
+		if br, err = r.generateBuildRun(logger, customRun); err != nil {
 			logger.V(0).Error(err, "Issuing BuildRun returned error")
 			return RequeueOnError(err)
 		}
@@ -178,13 +207,13 @@ func (r *CustomRunReconciler) Reconcile(
 		customRun.Status.StartTime = &now
 
 		// storing the ExtraFields on the Tekton Run instance status
-		if err = r.Client.Status().Patch(ctx, &customRun, client.MergeFrom(originalCustomRun)); err != nil {
+		if err = r.Client.Status().Patch(ctx, customRun, client.MergeFrom(originalCustomRun)); err != nil {
 			logger.V(0).Error(err, "trying to patch Tekton CustomRun status")
 			return RequeueOnError(err)
 		}
 		logger.V(0).Info("Tekton CustomRun Status ExtraFields updated with BuildRun coordinates")
 
-		if err = r.Client.Create(ctx, br); err != nil {
+		if err = r.Create(ctx, br); err != nil {
 			logger.V(0).Error(err, "Trying to create a new BuildRun instance")
 			return RequeueOnError(err)
 		}
@@ -194,7 +223,7 @@ func (r *CustomRunReconciler) Reconcile(
 		logger.V(0).Info("Retrieving BuildRun instance...")
 		// when the meta-information is populated, we need to extract the BuildRun name and retrieve
 		// the object
-		if err = r.Client.Get(ctx, extraFields.GetNamespacedName(), br); err != nil {
+		if err = r.Get(ctx, extraFields.GetNamespacedName(), br); err != nil {
 			logger.V(0).Error(err, "Trying to retrieve BuildRun instance")
 			return RequeueOnError(err)
 		}
@@ -204,16 +233,16 @@ func (r *CustomRunReconciler) Reconcile(
 
 			originalBr := br.DeepCopy()
 			br.Spec.State = buildapi.BuildRunRequestedStatePtr(buildapi.BuildRunStateCancel)
-			if err = r.Client.Patch(ctx, br, client.MergeFrom(originalBr)); err != nil {
+			if err = r.Patch(ctx, br, client.MergeFrom(originalBr)); err != nil {
 				logger.V(0).Error(err, "trying to patch BuildRun with cancellation state")
 				return RequeueOnError(err)
 			}
 		} else {
 			// reflecting BuildRuns' status conditions on the Tekton Run owner instance
-			r.reflectBuildRunStatusOnTektonCustomRun(logger, &customRun, br)
+			r.reflectBuildRunStatusOnTektonCustomRun(logger, customRun, br)
 
 			logger.V(0).Info("Updating Tekton CustomRun instance status...")
-			if err = r.Client.Status().Patch(ctx, &customRun, client.MergeFrom(originalCustomRun)); err != nil {
+			if err = r.Client.Status().Patch(ctx, customRun, client.MergeFrom(originalCustomRun)); err != nil {
 				logger.V(0).Error(err, "trying to patch Tekton CustomRun status")
 				return RequeueOnError(err)
 			}

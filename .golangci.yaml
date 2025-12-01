@@ -1,12 +1,32 @@
+version: "2"
 linters:
   enable:
+    - contextcheck
     - errcheck
-    - gosimple
+    - goconst
+    - gosec
     - govet
     - ineffassign
+    - misspell
     - staticcheck
     - unused
-    - contextcheck
-    - goconst
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
     - gofmt
-    - misspell
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

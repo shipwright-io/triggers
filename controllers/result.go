@@ -13,9 +13,5 @@ func Done() (ctrl.Result, error) {
 }
 
 func RequeueOnError(err error) (ctrl.Result, error) {
-	requeue := true
-	if err == nil {
-		requeue = false
-	}
-	return ctrl.Result{Requeue: requeue}, err
+	return ctrl.Result{Requeue: err != nil}, err
 }
