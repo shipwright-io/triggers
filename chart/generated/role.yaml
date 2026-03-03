@@ -34,6 +34,12 @@ rules:
   - tekton.dev
   resources:
   - customruns/finalizers
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - tekton.dev
+  resources:
   - customruns/status
   verbs:
   - patch
