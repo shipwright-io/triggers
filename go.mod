@@ -7,7 +7,7 @@ require (
 	github.com/google/go-github/v53 v53.2.0
 	github.com/onsi/ginkgo/v2 v2.28.1
 	github.com/onsi/gomega v1.39.1
-	github.com/shipwright-io/build v0.19.0
+	github.com/shipwright-io/build v0.19.1
 	github.com/tektoncd/pipeline v1.9.1
 	k8s.io/api v0.34.4
 	k8s.io/apimachinery v0.34.4
