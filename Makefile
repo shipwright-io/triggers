@@ -28,8 +28,9 @@ KO_OPTS ?= --base-import-paths --tags=${IMAGE_TAG}
 CONTROLLER_TOOLS_VERSION ?= v0.20.1
 CONTROLLER_GEN ?= $(LOCAL_BIN)/controller-gen
 
-# envtest version and full path to the executable
-ENVTEST_K8S_VERSION ?= 1.34
+# envtest k8s and setup-envtest versions, derived from go.mod dependencies
+ENVTEST_K8S_VERSION ?= $(shell go list -m -f "{{ .Version }}" k8s.io/api | awk -F'[v.]' '{printf "1.%d", $$3}')
+ENVTEST_VERSION ?= $(shell go list -m -f "{{ .Version }}" sigs.k8s.io/controller-runtime | awk -F'[v.]' '{printf "release-%d.%d", $$2, $$3}')
 ENVTEST ?= $(LOCAL_BIN)/setup-envtest
 
 # chart base directory and path to the "templates" folder
@@ -119,12 +120,12 @@ test-unit: CGO_ENABLED=1
 test-unit:
 	go test $(GOFLAGS_TEST) $(ARGS) ./pkg/... ./controllers/...
 
-# installs latest envtest-setup
+# installs envtest-setup
 .PHONY: envtest
 envtest: GOBIN=$(LOCAL_BIN)
 envtest: $(ENVTEST)
 $(ENVTEST):
-	go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+	go install sigs.k8s.io/controller-runtime/tools/setup-envtest@$(ENVTEST_VERSION)
 
 # run integration tests, with optional arguments
 .PHONY: test-integration
