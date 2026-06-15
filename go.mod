@@ -5,7 +5,7 @@ go 1.25.6
 require (
 	github.com/go-logr/logr v1.4.3
 	github.com/google/go-github/v53 v53.2.0
-	github.com/onsi/ginkgo/v2 v2.28.3
+	github.com/onsi/ginkgo/v2 v2.31.0
 	github.com/onsi/gomega v1.40.0
 	github.com/shipwright-io/build v0.19.0
 	github.com/tektoncd/pipeline v1.9.1
