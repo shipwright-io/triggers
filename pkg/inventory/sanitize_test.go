@@ -8,6 +8,8 @@ import (
 	"testing"
 )
 
+const testHTTPSGitRepoURL = "https://github.com/username/repository.git"
+
 func TestSanitizeURL(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -16,7 +18,7 @@ func TestSanitizeURL(t *testing.T) {
 		wantErr bool
 	}{{
 		name:    "http scheme URL",
-		rawURL:  "https://github.com/username/repository.git",
+		rawURL:  testHTTPSGitRepoURL,
 		want:    "github.com/username/repository",
 		wantErr: false,
 	}, {
@@ -48,22 +50,22 @@ func TestCompareURLs(t *testing.T) {
 		want bool
 	}{{
 		name: "http scheme URLs",
-		a:    "https://github.com/username/repository.git",
+		a:    testHTTPSGitRepoURL,
 		b:    "http://github.com/username/repository",
 		want: true,
 	}, {
 		name: "git and http URLs",
-		a:    "https://github.com/username/repository.git",
+		a:    testHTTPSGitRepoURL,
 		b:    "git@github.com:username/repository.git",
 		want: true,
 	}, {
 		name: "http scheme different URLs",
-		a:    "https://github.com/username/repository.git",
+		a:    testHTTPSGitRepoURL,
 		b:    "https://github.com/username/another-repository.git",
 		want: false,
 	}, {
 		name: "git and git schemes different URLs",
-		a:    "https://github.com/username/repository.git",
+		a:    testHTTPSGitRepoURL,
 		b:    "git@github.com:username/another-repository.git",
 		want: false,
 	}}

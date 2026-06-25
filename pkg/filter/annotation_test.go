@@ -14,6 +14,8 @@ import (
 	tektonapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 )
 
+const testBuildName = "build"
+
 func TestPipelineRunExtractTriggeredBuildsSlice(t *testing.T) {
 	// PipelineRun with a bogus annotation payload, instead of valid JSON
 	pipelineRunWithBogusAnnotation := stubs.TektonPipelineRun("pipeline")
@@ -24,7 +26,7 @@ func TestPipelineRunExtractTriggeredBuildsSlice(t *testing.T) {
 	// PipelineRun with valid triggered-builds annotation, JSON payload
 	pipelineRunWithTriggeredBuildsAnnotation := stubs.TektonPipelineRun("pipeline")
 	triggeredBuilds := []TriggeredBuild{{
-		BuildName: "build",
+		BuildName: testBuildName,
 		ObjectRef: &buildapi.WhenObjectRef{},
 	}}
 	triggeredBuildsAnnotationBytes, err := json.Marshal(triggeredBuilds)
@@ -82,16 +84,16 @@ func TestTriggereBuildsContainsObjectRef(t *testing.T) {
 	}{{
 		name: "triggered builds contains objectRef",
 		triggeredBuilds: []TriggeredBuild{{
-			BuildName: "build",
+			BuildName: testBuildName,
 			ObjectRef: stubs.TriggerWhenPipelineSucceeded.ObjectRef.DeepCopy(),
 		}},
-		buildNames: []string{"build"},
+		buildNames: []string{testBuildName},
 		objectRef:  stubs.TriggerWhenPipelineSucceeded.ObjectRef.DeepCopy(),
 		want:       true,
 	}, {
 		name:            "empty triggered builds does not contain objectRef",
 		triggeredBuilds: []TriggeredBuild{},
-		buildNames:      []string{"build"},
+		buildNames:      []string{testBuildName},
 		objectRef:       stubs.TriggerWhenPipelineSucceeded.ObjectRef.DeepCopy(),
 		want:            false,
 	}, {
@@ -100,16 +102,16 @@ func TestTriggereBuildsContainsObjectRef(t *testing.T) {
 			BuildName: "another-build",
 			ObjectRef: stubs.TriggerWhenPipelineSucceeded.ObjectRef.DeepCopy(),
 		}},
-		buildNames: []string{"build"},
+		buildNames: []string{testBuildName},
 		objectRef:  stubs.TriggerWhenPipelineSucceeded.ObjectRef.DeepCopy(),
 		want:       false,
 	}, {
 		name: "triggered builds does not contain objectRef",
 		triggeredBuilds: []TriggeredBuild{{
-			BuildName: "build",
+			BuildName: testBuildName,
 			ObjectRef: stubs.TriggerWhenPushToMain.ObjectRef.DeepCopy(),
 		}},
-		buildNames: []string{"build"},
+		buildNames: []string{testBuildName},
 		objectRef:  stubs.TriggerWhenPipelineSucceeded.ObjectRef.DeepCopy(),
 		want:       false,
 	}}
@@ -146,9 +148,9 @@ func TestAppendIntoTriggeredBuildSliceAsAnnotation(t *testing.T) {
 	}, {
 		name:            "empty triggered-builds with a single build",
 		triggeredBuilds: []TriggeredBuild{},
-		buildNames:      []string{"build"},
+		buildNames:      []string{testBuildName},
 		objectRef:       &buildapi.WhenObjectRef{},
-		want:            "[{\"buildName\":\"build\",\"objectRef\":{}}]",
+		want:            "[{\"buildName\":\"" + testBuildName + "\",\"objectRef\":{}}]",
 		wantErr:         false,
 	}, {
 		name: "single triggered-build with single build",
@@ -156,10 +158,10 @@ func TestAppendIntoTriggeredBuildSliceAsAnnotation(t *testing.T) {
 			BuildName: "previous-build",
 			ObjectRef: &buildapi.WhenObjectRef{},
 		}},
-		buildNames: []string{"build"},
+		buildNames: []string{testBuildName},
 		objectRef:  &buildapi.WhenObjectRef{},
 		want: "[{\"buildName\":\"previous-build\",\"objectRef\":{}}," +
-			"{\"buildName\":\"build\",\"objectRef\":{}}]",
+			"{\"buildName\":\"" + testBuildName + "\",\"objectRef\":{}}]",
 		wantErr: false,
 	}}
 

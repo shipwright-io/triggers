@@ -15,6 +15,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const testPipelineSpecDescription = "testing"
+
 var TektonPipelineRunStatusCustomTaskShipwright = &tektonapi.PipelineSpec{
 	Tasks: []tektonapi.PipelineTask{TektonPipelineTaskRefToShipwright},
 }
@@ -69,7 +71,7 @@ func TektonPipelineRunCanceled(name string) tektonapi.PipelineRun {
 		tektonapi.PipelineRunReasonCancelled,
 	)
 	pipelineRun.Status.PipelineRunStatusFields = tektonapi.PipelineRunStatusFields{
-		PipelineSpec: &tektonapi.PipelineSpec{Description: "testing"},
+		PipelineSpec: &tektonapi.PipelineSpec{Description: testPipelineSpecDescription},
 	}
 	return pipelineRun
 }
@@ -79,7 +81,7 @@ func TektonPipelineRunRunning(name string) tektonapi.PipelineRun {
 	pipelineRun.Status.StartTime = &metav1.Time{Time: time.Now()}
 	pipelineRun.Status.PipelineRunStatusFields = tektonapi.PipelineRunStatusFields{
 		StartTime:    &metav1.Time{Time: time.Now()},
-		PipelineSpec: &tektonapi.PipelineSpec{Description: "testing"},
+		PipelineSpec: &tektonapi.PipelineSpec{Description: testPipelineSpecDescription},
 	}
 	return pipelineRun
 }
@@ -93,7 +95,7 @@ func TektonPipelineRunTimedOut(name string) tektonapi.PipelineRun {
 		StartTime: &metav1.Time{
 			Time: time.Date(1982, time.January, 1, 0, 0, 0, 0, time.Local),
 		},
-		PipelineSpec: &tektonapi.PipelineSpec{Description: "testing"},
+		PipelineSpec: &tektonapi.PipelineSpec{Description: testPipelineSpecDescription},
 	}
 	return pipelineRun
 }
@@ -102,7 +104,7 @@ func TektonPipelineRunSucceeded(name string) tektonapi.PipelineRun {
 	pipelineRun := TektonPipelineRun(name)
 	pipelineRun.Status.MarkSucceeded("Succeeded", fmt.Sprintf("PipelineRun %q has succeeded", name))
 	pipelineRun.Status.PipelineRunStatusFields = tektonapi.PipelineRunStatusFields{
-		PipelineSpec: &tektonapi.PipelineSpec{Description: "testing"},
+		PipelineSpec: &tektonapi.PipelineSpec{Description: testPipelineSpecDescription},
 	}
 	return pipelineRun
 }
@@ -111,7 +113,7 @@ func TektonPipelineRunFailed(name string) tektonapi.PipelineRun {
 	pipelineRun := TektonPipelineRun(name)
 	pipelineRun.Status.MarkFailed("Failed", fmt.Sprintf("PipelineRun %q has failed", name))
 	pipelineRun.Status.PipelineRunStatusFields = tektonapi.PipelineRunStatusFields{
-		PipelineSpec: &tektonapi.PipelineSpec{Description: "testing"},
+		PipelineSpec: &tektonapi.PipelineSpec{Description: testPipelineSpecDescription},
 	}
 	return pipelineRun
 }
