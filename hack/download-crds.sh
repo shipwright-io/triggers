@@ -21,7 +21,7 @@ CRD_DIR="${CRD_DIR:-/var/tmp}"
 
 readonly REPO_HOST="raw.githubusercontent.com"
 readonly SHIPWRIGHT_REPO_PATH="shipwright-io/build/${SHIPWRIGHT_VERSION}/deploy/crds"
-readonly TEKTON_REPO_PATH="tektoncd/pipeline/${TEKTON_VERSION}/config"
+readonly TEKTON_REPO_PATH="tektoncd/pipeline/${TEKTON_VERSION}/config/300-crds"
 
 # list of shipwright crd files to be downloaded from the repository
 declare -a SHIPWRIGHT_CRD_FILES=(
@@ -33,12 +33,11 @@ declare -a SHIPWRIGHT_CRD_FILES=(
 
 # list of tekton crd files to be downloaded from the repository
 declare -a TEKTON_CRD_FILES=(
-	300-clustertask.yaml
 	300-customrun.yaml
 	300-pipelinerun.yaml
 	300-pipeline.yaml
 	300-resolutionrequest.yaml
-	300-resource.yaml
+	300-stepaction.yaml
 	300-taskrun.yaml
 	300-task.yaml
 	300-verificationpolicy.yaml
@@ -49,6 +48,7 @@ function do_curl() {
 	local URL_BASE="${1}"
 	local FILENAME="${2}"
 	curl \
+		--fail \
 		--location \
 		--output "${CRD_DIR}/${FILENAME}" \
 		--remote-header-name \

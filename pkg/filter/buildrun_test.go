@@ -14,6 +14,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
+const testBuildRunName = "buildrun"
+
 func TestExtractBuildRunCustomRunOwner(t *testing.T) {
 	tests := []struct {
 		name string
@@ -37,7 +39,7 @@ func TestExtractBuildRunCustomRunOwner(t *testing.T) {
 					Name:       "customrun",
 				}},
 				Namespace: "namespace",
-				Name:      "buildrun",
+				Name:      testBuildRunName,
 			},
 		},
 		want: &types.NamespacedName{Namespace: "namespace", Name: "customrun"},

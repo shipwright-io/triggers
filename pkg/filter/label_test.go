@@ -25,13 +25,13 @@ func TestAppendIssuedBuildRunsLabel(t *testing.T) {
 	}{{
 		name:            "PipelineRun without BuildRun labeled",
 		pipelineRun:     stubs.TektonPipelineRun("pipeline"),
-		buildRunsIssued: []string{"buildrun"},
-		want:            "buildrun",
+		buildRunsIssued: []string{testBuildRunName},
+		want:            testBuildRunName,
 	}, {
 		name:            "PipelineRun with BuildRun labeled",
 		pipelineRun:     pipelineRunLabeled,
-		buildRunsIssued: []string{"buildrun"},
-		want:            "buildrun,existing-buildrun",
+		buildRunsIssued: []string{testBuildRunName},
+		want:            testBuildRunName + ",existing-buildrun",
 	}}
 
 	for _, tt := range tests {

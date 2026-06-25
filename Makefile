@@ -25,7 +25,7 @@ KO_DOCKER_REPO ?= $(IMAGE_HOST)/$(IMAGE_NAMESPACE)
 KO_OPTS ?= --base-import-paths --tags=${IMAGE_TAG}
 
 # controller-gen version and full path to the executable
-CONTROLLER_TOOLS_VERSION ?= v0.20.1
+CONTROLLER_TOOLS_VERSION ?= v0.21.0
 CONTROLLER_GEN ?= $(LOCAL_BIN)/controller-gen
 
 # envtest k8s and setup-envtest versions, derived from go.mod dependencies
@@ -38,8 +38,8 @@ CHART_DIR ?= ./chart
 MANIFEST_DIR ?= $(CHART_DIR)/generated
 
 # shipwright and tekton target versions to download upstream crd resources
-SHIPWRIGHT_VERSION ?= v0.19.0
-TEKTON_VERSION ?= v0.56.8
+SHIPWRIGHT_VERSION ?= v0.20.0
+TEKTON_VERSION ?= v1.12.0
 
 # full path to the directory where the crds are downloaded
 CRD_DIR ?= $(LOCAL_BIN)/crds

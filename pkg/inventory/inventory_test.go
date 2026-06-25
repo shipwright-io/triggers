@@ -15,9 +15,15 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
+const (
+	testInventoryName       = "name"
+	testInventoryBuildName  = "buildname"
+	testConditionSuccessful = "Successful"
+)
+
 var buildWithTrigger = stubs.ShipwrightBuildWithTriggers(
 	"ghcr.io/shipwright-io",
-	"name",
+	testInventoryName,
 	stubs.TriggerWhenPushToMain,
 )
 
@@ -30,12 +36,12 @@ func TestInventory(t *testing.T) {
 		i.Add(buildWithTrigger)
 		g.Expect(len(i.cache)).To(gomega.Equal(1))
 
-		_, exists := i.cache[types.NamespacedName{Namespace: stubs.Namespace, Name: "name"}]
+		_, exists := i.cache[types.NamespacedName{Namespace: stubs.Namespace, Name: testInventoryName}]
 		g.Expect(exists).To(gomega.BeTrue())
 	})
 
 	t.Run("remove inventory item", func(_ *testing.T) {
-		i.Remove(types.NamespacedName{Namespace: stubs.Namespace, Name: "name"})
+		i.Remove(types.NamespacedName{Namespace: stubs.Namespace, Name: testInventoryName})
 		g.Expect(len(i.cache)).To(gomega.Equal(0))
 	})
 }
@@ -64,15 +70,15 @@ func TestInventory_SearchForObjectRef(t *testing.T) {
 	buildWithObjectRefName := buildapi.Build{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: stubs.Namespace,
-			Name:      "buildname",
+			Name:      testInventoryBuildName,
 		},
 		Spec: buildapi.BuildSpec{
 			Trigger: &buildapi.Trigger{
 				When: []buildapi.TriggerWhen{{
 					Type: buildapi.PipelineTrigger,
 					ObjectRef: &buildapi.WhenObjectRef{
-						Name:   "name",
-						Status: []string{"Successful"},
+						Name:   testInventoryName,
+						Status: []string{testConditionSuccessful},
 					},
 				}},
 			},
@@ -82,14 +88,14 @@ func TestInventory_SearchForObjectRef(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:    map[string]string{"k": "v"},
 			Namespace: stubs.Namespace,
-			Name:      "buildname",
+			Name:      testInventoryBuildName,
 		},
 		Spec: buildapi.BuildSpec{
 			Trigger: &buildapi.Trigger{
 				When: []buildapi.TriggerWhen{{
 					Type: buildapi.PipelineTrigger,
 					ObjectRef: &buildapi.WhenObjectRef{
-						Status:   []string{"Successful"},
+						Status:   []string{testConditionSuccessful},
 						Selector: map[string]string{"k": "v"},
 					},
 				}},
@@ -108,29 +114,29 @@ func TestInventory_SearchForObjectRef(t *testing.T) {
 		builds:   []buildapi.Build{buildWithObjectRefName},
 		whenType: buildapi.PipelineTrigger,
 		objectRef: buildapi.WhenObjectRef{
-			Name:   "name",
-			Status: []string{"Successful"},
+			Name:   testInventoryName,
+			Status: []string{testConditionSuccessful},
 		},
 		want: []SearchResult{{
-			BuildName: types.NamespacedName{Namespace: stubs.Namespace, Name: "buildname"},
+			BuildName: types.NamespacedName{Namespace: stubs.Namespace, Name: testInventoryBuildName},
 		}},
 	}, {
 		name:     "find build by label selector",
 		builds:   []buildapi.Build{buildWithObjectRefSelector},
 		whenType: buildapi.PipelineTrigger,
 		objectRef: buildapi.WhenObjectRef{
-			Status:   []string{"Successful"},
+			Status:   []string{testConditionSuccessful},
 			Selector: map[string]string{"k": "v"},
 		},
 		want: []SearchResult{{
-			BuildName: types.NamespacedName{Namespace: stubs.Namespace, Name: "buildname"},
+			BuildName: types.NamespacedName{Namespace: stubs.Namespace, Name: testInventoryBuildName},
 		}},
 	}, {
 		name:     "does not find builds, due to wrong selector",
 		builds:   []buildapi.Build{buildWithObjectRefSelector},
 		whenType: buildapi.PipelineTrigger,
 		objectRef: buildapi.WhenObjectRef{
-			Status:   []string{"Successful"},
+			Status:   []string{testConditionSuccessful},
 			Selector: map[string]string{"wrong": "label"},
 		},
 		want: []SearchResult{},
@@ -140,7 +146,7 @@ func TestInventory_SearchForObjectRef(t *testing.T) {
 		whenType: buildapi.PipelineTrigger,
 		objectRef: buildapi.WhenObjectRef{
 			Name:   "wrong",
-			Status: []string{"Successful"},
+			Status: []string{testConditionSuccessful},
 		},
 		want: []SearchResult{},
 	}}
