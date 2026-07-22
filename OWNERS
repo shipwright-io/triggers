@@ -1,18 +1,17 @@
 approvers:
-- adambkaplan
 - qu1queee
 - SaschaSchwarze0
 - otaviof
 - HeavyWombat
 
 reviewers:
-- adambkaplan
 - qu1queee
 - SaschaSchwarze0
 - otaviof
 - HeavyWombat
 
 emeritus_approvers:
+- adambkaplan # 2026-06-17
 - sbose78
 
 emeritus_reviewers:
