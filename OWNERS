@@ -3,17 +3,16 @@ approvers:
 - SaschaSchwarze0
 - otaviof
 - HeavyWombat
+- IrvingMg
 
 reviewers:
 - qu1queee
 - SaschaSchwarze0
 - otaviof
 - HeavyWombat
+- IrvingMg
 - kaizakin
 
 emeritus_approvers:
 - adambkaplan # 2026-06-17
-- sbose78
-
-emeritus_reviewers:
 - sbose78
